@@ -48,13 +48,23 @@ body{
     font-variant-numeric: tabular-nums;
     -webkit-text-stroke: 1px black;
 }
-
+#temporizador-descanso{
+    color:#1B4965;
+    font-size: clamp(60px, 9vw, 105px);
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    -webkit-text-stroke: 1px black;
+}
 .subtitulo{
     margin:27px 0 8px;
     color:#8050EA;
     font-size: 27px;
     text-align: center;;
     -webkit-text-stroke: 0.7px black;;
+    text-align: center;
+    -webkit-text-stroke: 0.7px black;
 }
 
 .marco-pokemon{
@@ -81,29 +91,54 @@ body{
     border-radius: 11px;
     color:white;
     font-family:inherit;
+    color: white;
+    font-family: inherit;
     font-size: 34px;
     font-weight: 800;
     -webkit-text-stroke: 1px black;
     text-shadow: 1px 1px 0 black;
     cursor: pointer;
     transition:transform 0.2s,background-color 0.2s;
+    transition: transform 0.2s, background-color 0.2s;
 }
-.boton-inicio:hover{
+
+.boton-inicio:hover {
     background-color: rgba(128, 80, 234, 0.12);
     transform: scale(1.04);
 }
-.boton-inicio:active{
+
+
+.boton-inicio:active {
     transform: scale(0.97);
 }
-/*adaptacion a pantallitas*/
+/* OCULTAR PANTALLAS */
+.oculta{
+    display: none !important;
+}
+/* TEMA SNORLAX */
+.pantalla-descanso .marco-temporizador,
+.pantalla-descanso .marco-pokemon,
+.pantalla-descanso .boton-inicio {
+    border-color: #1B4965;
+}
+.boton-inicio:hover #temporizador-descanso,
+.pantalla-descanso .subtitulo {
+    color: #1B4965;
+}
+.pantalla-descanso .boton-inicio:hover {
+    background-color: rgba(27, 73, 101, 0.15);
+}
+/* Adaptación a pantallas pequeñas */
 @media (max-width: 600px) {
 
     .pantalla-estudio {
         padding: 25px 12px;
+        padding: 20px 12px;
     }
 
     .titulo {
         margin-bottom: 25px;
+        margin-bottom: 20px;
     }
 
     .marco-temporizador {
