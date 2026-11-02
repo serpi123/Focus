@@ -1,7 +1,7 @@
 // =========================================
 // ELEMENTOS DEL DOM
 // =========================================
-
+document.addEventListener("DOMContentLoaded", () => {
 // Barra superior (Perfil)
 const barraSuperior = document.getElementById("barraSuperior");
 const nombreUsuarioActivo = document.getElementById("nombreUsuarioActivo");
@@ -518,3 +518,4 @@ if (usuarioActivoGuardado) {
 } else {
     cambiarModo("auth", false);
 }
+});
