@@ -6,12 +6,22 @@ body {
     margin: 0;
     min-height: 100vh;
     font-family: "Fredoka", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(135deg, #d8cbff 0%, #b39bf7 100%);
+    background: linear-gradient(135deg, #1f0d05 0%, #4a1505 35%, #8f2d0a 70%, #d85718 100%);
     transition: background 0.5s ease;
     overflow-x: hidden;
 }
 
-/* --- TEMAS DE FONDO CON DEGRADADO SUTIL --- */
+/* =========================================
+   TEMAS DE FONDO CON DEGRADADO SUTIL
+   ========================================= */
+body.tema-auth {
+    background: linear-gradient(135deg, #220c04 0%, #4d1804 35%, #8a2e07 70%, #d45914 100%);
+}
+
+body.tema-bulbasaur {
+    background: linear-gradient(135deg, #d8f3dc 0%, #b7e4c7 50%, #95d5b2 100%);
+}
+
 body.tema-estudio {
     background: linear-gradient(135deg, #d8cbff 0%, #b39bf7 100%);
 }
@@ -20,7 +30,281 @@ body.tema-descanso {
     background: linear-gradient(135deg, #d4effc 0%, #9bd0f5 100%);
 }
 
-/* --- CONTENEDOR PRINCIPAL DE PANTALLA --- */
+/* =========================================
+   BARRA SUPERIOR (PERFIL Y BOTÓN SALIR)
+   ========================================= */
+.barra-superior {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    border-radius: 50px;
+    padding: 6px 14px 6px 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.perfil-usuario {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #2b2b2b;
+}
+
+.icono-perfil {
+    font-size: 16px;
+}
+
+.nombre-perfil {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.06);
+    border: none;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #555555;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+    background: #e63946;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(230, 57, 70, 0.3);
+}
+
+/* =========================================
+   PANTALLA DE AUTENTICACIÓN (TEMA CHARIZARD)
+   ========================================= */
+.marco-auth {
+    width: 440px;
+    max-width: 92vw;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 2px solid rgba(255, 197, 99, 0.35);
+    border-radius: 30px;
+    padding: 26px 24px 24px;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5),
+                0 0 35px rgba(230, 58, 0, 0.22);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeInAuth 0.4s ease;
+}
+
+@keyframes fadeInAuth {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.auth-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.avatar-auth {
+    width: 125px;
+    height: 125px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 148, 66, 0.35) 0%, rgba(255, 255, 255, 0.1) 70%);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 197, 99, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(230, 58, 0, 0.38);
+    margin-bottom: 10px;
+    transition: transform 0.3s ease;
+}
+
+.avatar-auth:hover {
+    transform: scale(1.06) rotate(3deg);
+}
+
+.imagen-auth {
+    width: 92%;
+    height: 92%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+}
+
+.titulo-auth {
+    margin: 0;
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 3px 14px rgba(230, 58, 0, 0.65);
+}
+
+.subtitulo-auth {
+    margin: 4px 0 0;
+    color: #ffd8a8;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Tabs: Login / Register (Colores de fuego y ámbar) */
+.auth-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.32);
+    border-radius: 50px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 9px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 50px;
+    color: rgba(255, 230, 205, 0.75);
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.tab-btn:hover {
+    color: #ffffff;
+}
+
+.tab-btn.activo {
+    background: linear-gradient(135deg, #ffffff 0%, #fff0e3 100%);
+    color: #8c2900;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(230, 58, 0, 0.3);
+}
+
+/* Formularios */
+.form-auth {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.campo-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: left;
+}
+
+.label-auth {
+    color: #ffd8a8;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding-left: 4px;
+}
+
+.input-auth {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255, 214, 123, 0.32);
+    border-radius: 14px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.input-auth::placeholder {
+    color: rgba(255, 220, 190, 0.45);
+}
+
+.input-auth:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.22);
+    border-color: #ff9442;
+    box-shadow: 0 0 14px rgba(255, 148, 66, 0.45);
+}
+
+.btn-auth {
+    width: 100%;
+    margin-top: 4px;
+    background: linear-gradient(135deg, #ff7b00 0%, #e63900 60%, #ba2000 100%);
+    box-shadow: 0 8px 24px rgba(230, 58, 0, 0.45);
+}
+
+.btn-auth:hover {
+    background: linear-gradient(135deg, #ff8c1a 0%, #f0440a 60%, #cc2600 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(230, 58, 0, 0.6);
+}
+
+.btn-auth:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 12px rgba(230, 58, 0, 0.3);
+}
+
+.btn-invitado {
+    background: transparent;
+    border: none;
+    color: #ffd8a8;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    padding: 4px;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.btn-invitado:hover {
+    color: #ffffff;
+}
+
+.mensaje-error {
+    margin: 0;
+    color: #ffd0d0;
+    background: rgba(186, 32, 0, 0.3);
+    border: 1px solid rgba(230, 58, 0, 0.5);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* =========================================
+   CONTENEDOR PRINCIPAL DE PANTALLA
+   ========================================= */
 .pantalla-estudio {
     min-height: 100vh;
     width: 100%;
@@ -28,25 +312,29 @@ body.tema-descanso {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 30px 20px 40px;
+    padding: 24px 20px 32px;
 }
 
 /* --- TÍTULO PRINCIPAL --- */
 .titulo {
-    margin: 0 0 20px;
+    margin: 0 0 16px;
     text-align: center;
     color: #ffffff;
-    font-size: clamp(36px, 2.6vw, 32px);
+    font-size: clamp(28px, 2.5vw, 34px);
     font-weight: 700;
     letter-spacing: 0.5px;
     text-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
-/* --- TARJETA DEL TEMPORIZADOR (EFECTO CRISTAL / GLASSMORPHISM) --- */
+.tema-bulbasaur .titulo {
+    text-shadow: 0 4px 14px rgba(27, 67, 50, 0.22);
+}
+
+/* --- TARJETA DEL TEMPORIZADOR (GLASSMORPHISM) --- */
 .marco-temporizador {
     width: 370px;
     max-width: 90%;
-    min-height: 115px;
+    min-height: 110px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -70,7 +358,7 @@ body.tema-descanso {
 #temporizador,
 #temporizador-descanso {
     color: #6C3CE0;
-    font-size: clamp(64px, 8.5vw, 98px);
+    font-size: clamp(62px, 8vw, 94px);
     font-weight: 700;
     line-height: 1;
     white-space: nowrap;
@@ -78,22 +366,12 @@ body.tema-descanso {
     letter-spacing: 2px;
 }
 
-/* --- SUBTÍTULO --- */
-.subtitulo {
-    margin: 24px 0 14px;
-    color: #6C3CE0;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.6);
-}
-
 /* --- TARJETA DEL POKÉMON --- */
 .marco-pokemon {
     width: 480px;
-    height: 380px;
+    height: 360px;
     max-width: 90vw;
+    margin-top: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -104,13 +382,26 @@ body.tema-descanso {
     border-radius: 32px;
     box-shadow: 0 14px 35px rgba(108, 60, 224, 0.16),
                 0 3px 8px rgba(0, 0, 0, 0.04);
-    padding: 20px;
+    padding: 18px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.marco-pokemon.marco-bulbasaur {
+    width: 440px;
+    height: 310px;
+    margin-top: 0;
+    background: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 14px 35px rgba(45, 106, 79, 0.15),
+                0 3px 8px rgba(0, 0, 0, 0.04);
 }
 
 .marco-pokemon:hover {
     transform: translateY(-2px);
     box-shadow: 0 18px 40px rgba(108, 60, 224, 0.22);
+}
+
+.marco-bulbasaur:hover {
+    box-shadow: 0 18px 40px rgba(45, 106, 79, 0.22);
 }
 
 .imagen-pokemon {
@@ -125,33 +416,277 @@ body.tema-descanso {
     transform: scale(1.04);
 }
 
-/* --- BOTÓN MODERNO TIPO PÍLDORA (ELEVACIÓN & SOMBRA) --- */
-.boton-inicio {
-    margin-top: 26px;
+/* =========================================
+   TARJETA DEL PERSONALIZADOR (TEMA BULBASAUR)
+   ========================================= */
+.marco-personalizador {
+    width: 440px;
+    max-width: 90vw;
+    margin-top: 14px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 26px;
+    box-shadow: 0 12px 30px rgba(45, 106, 79, 0.14),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+    padding: 16px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.marco-personalizador:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(45, 106, 79, 0.2);
+}
+
+.control-tiempo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.etiqueta-tiempo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1b4332;
+    font-size: 15.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.stepper-tiempo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-stepper {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #52b788;
+    color: #2d6a4f;
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(45, 106, 79, 0.12);
+    transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-stepper:hover {
+    background-color: #40916c;
+    border-color: #40916c;
+    color: #ffffff;
+    transform: scale(1.08);
+    box-shadow: 0 6px 14px rgba(45, 106, 79, 0.25);
+}
+
+.btn-stepper:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(45, 106, 79, 0.2);
+}
+
+.valor-tiempo {
+    min-width: 68px;
+    text-align: center;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+}
+
+.valor-tiempo span {
+    color: #1b4332;
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.valor-tiempo small {
+    color: #40916c;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.divisor-personalizador {
+    height: 1px;
+    background: rgba(45, 106, 79, 0.15);
+    width: 100%;
+}
+
+.fila-presets {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    padding-top: 2px;
+}
+
+.btn-preset {
+    padding: 5px 13px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1.5px solid rgba(82, 183, 136, 0.35);
+    border-radius: 20px;
+    color: #2d6a4f;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-preset:hover {
+    background: #52b788;
+    color: #ffffff;
+    border-color: #52b788;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(45, 106, 79, 0.18);
+}
+
+/* =========================================
+   CONTROLES Y ACCIONES (DISEÑO PULIDO)
+   ========================================= */
+.contenedor-acciones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    gap: 12px;
+    width: 100%;
+}
+
+.icono-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* --- BOTÓN PRINCIPAL (PLAY / PAUSA / REANUDAR) --- */
+.boton-principal {
+    min-width: 220px;
     padding: 13px 44px;
-    background-color: #6C3CE0;
+    background: linear-gradient(135deg, #7443e8 0%, #5d2ece 100%);
     border: none;
     border-radius: 50px;
     color: #ffffff;
     font-family: inherit;
-    font-size: 22px;
+    font-size: 19px;
     font-weight: 700;
     letter-spacing: 0.5px;
     cursor: pointer;
-    box-shadow: 0 8px 24px rgba(108, 60, 224, 0.4),
-                0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    box-shadow: 0 8px 24px rgba(108, 60, 224, 0.38),
+                0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.boton-inicio:hover {
-    background-color: #5b2fd4;
+.boton-principal:hover {
+    filter: brightness(1.06);
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(108, 60, 224, 0.52);
+    box-shadow: 0 12px 28px rgba(108, 60, 224, 0.5);
 }
 
-.boton-inicio:active {
+.boton-principal:active {
     transform: translateY(1px);
-    box-shadow: 0 4px 12px rgba(108, 60, 224, 0.3);
+    box-shadow: 0 4px 12px rgba(108, 60, 224, 0.28);
+}
+
+/* --- BOTONES SECUNDARIOS EN FILA --- */
+.fila-botones-secundarios {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.boton-secundario {
+    min-width: 130px;
+    padding: 9px 18px;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50px;
+    color: #5527ba;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(108, 60, 224, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.boton-secundario:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(108, 60, 224, 0.4);
+    color: #4317a3;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(108, 60, 224, 0.2);
+}
+
+.boton-secundario:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 6px rgba(108, 60, 224, 0.12);
+}
+
+/* =========================================
+   TEMA BULBASAUR - ADAPTACIONES ESPECÍFICAS
+   ========================================= */
+.tema-bulbasaur .boton-principal {
+    background: linear-gradient(135deg, #40916c 0%, #2d6a4f 100%);
+    box-shadow: 0 8px 24px rgba(45, 106, 79, 0.38),
+                0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.tema-bulbasaur .boton-principal:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 12px 28px rgba(45, 106, 79, 0.5);
+}
+
+.tema-bulbasaur .boton-principal:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.28);
+}
+
+.tema-bulbasaur .boton-secundario {
+    color: #2d6a4f;
+    box-shadow: 0 4px 14px rgba(45, 106, 79, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tema-bulbasaur .boton-secundario:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(45, 106, 79, 0.4);
+    color: #1b4332;
+    box-shadow: 0 8px 20px rgba(45, 106, 79, 0.2);
+}
+
+.tema-bulbasaur .boton-secundario:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 6px rgba(45, 106, 79, 0.12);
 }
 
 /* =========================================
@@ -171,10 +706,6 @@ body.tema-descanso {
     color: #1B4965;
 }
 
-.tema-descanso .subtitulo {
-    color: #1B4965;
-}
-
 .tema-descanso .marco-pokemon {
     background: rgba(255, 255, 255, 0.58);
     box-shadow: 0 14px 35px rgba(27, 73, 101, 0.16),
@@ -185,20 +716,114 @@ body.tema-descanso {
     box-shadow: 0 18px 40px rgba(27, 73, 101, 0.22);
 }
 
-.tema-descanso .boton-inicio {
-    background-color: #1B4965;
+.tema-descanso .boton-principal {
+    background: linear-gradient(135deg, #1f5677 0%, #173f57 100%);
     box-shadow: 0 8px 24px rgba(27, 73, 101, 0.38),
-                0 2px 4px rgba(0, 0, 0, 0.1);
+                0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
-.tema-descanso .boton-inicio:hover {
-    background-color: #14374d;
-    box-shadow: 0 12px 28px rgba(27, 73, 101, 0.48);
+.tema-descanso .boton-principal:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 12px 28px rgba(27, 73, 101, 0.5);
 }
 
-.tema-descanso .boton-inicio:active {
+.tema-descanso .boton-principal:active {
     transform: translateY(1px);
-    box-shadow: 0 4px 12px rgba(27, 73, 101, 0.3);
+    box-shadow: 0 4px 12px rgba(27, 73, 101, 0.28);
+}
+
+.tema-descanso .boton-secundario {
+    color: #1B4965;
+    box-shadow: 0 4px 14px rgba(27, 73, 101, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tema-descanso .boton-secundario:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(27, 73, 101, 0.4);
+    color: #102e40;
+    box-shadow: 0 8px 20px rgba(27, 73, 101, 0.2);
+}
+
+.tema-descanso .boton-secundario:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 6px rgba(27, 73, 101, 0.12);
+}
+
+/* =========================================
+   NOTIFICACIÓN TOAST (REEMPLAZO DE ALERT)
+   ========================================= */
+.notificacion-toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    min-width: 310px;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 2px solid rgba(255, 255, 255, 0.98);
+    border-radius: 20px;
+    padding: 13px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18),
+                0 4px 10px rgba(0, 0, 0, 0.08);
+    transform: translateY(-50px) scale(0.92);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.notificacion-toast.visible {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.toast-icono {
+    font-size: 26px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.toast-cuerpo {
+    flex: 1;
+}
+
+.toast-titulo {
+    display: block;
+    color: #1a1a1a;
+    font-size: 14.5px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.toast-mensaje {
+    margin: 0;
+    color: #4a4a4a;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.toast-cerrar {
+    background: transparent;
+    border: none;
+    color: #888888;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 50%;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.toast-cerrar:hover {
+    color: #111111;
+    transform: scale(1.15);
 }
 
 /* --- CLASE UTILITARIA PARA OCULTAR --- */
@@ -208,33 +833,103 @@ body.tema-descanso {
 
 /* --- RESPONSIVE / PANTALLAS PEQUEÑAS --- */
 @media (max-width: 600px) {
+    .barra-superior {
+        top: 12px;
+        right: 12px;
+        padding: 4px 10px 4px 8px;
+    }
+
+    .nombre-perfil {
+        max-width: 90px;
+        font-size: 13px;
+    }
+
+    .notificacion-toast {
+        top: 14px;
+        right: 14px;
+        left: 14px;
+        min-width: auto;
+        max-width: none;
+    }
+
+    .marco-auth {
+        padding: 22px 18px 20px;
+        border-radius: 24px;
+    }
+
+    .avatar-auth {
+        width: 100px;
+        height: 100px;
+    }
+
+    .titulo-auth {
+        font-size: 22px;
+    }
+
     .pantalla-estudio {
-        padding: 20px 14px 30px;
+        padding: 18px 12px 24px;
     }
 
     .titulo {
-        margin-bottom: 15px;
+        margin-bottom: 12px;
+        font-size: 26px;
     }
 
     .marco-temporizador {
-        min-height: 95px;
+        min-height: 90px;
         border-radius: 22px;
-    }
-
-    .subtitulo {
-        font-size: 19px;
-        margin: 18px 0 10px;
     }
 
     .marco-pokemon {
         width: 100%;
-        height: 300px;
+        height: 270px;
         border-radius: 24px;
+        margin-top: 12px;
     }
 
-    .boton-inicio {
-        font-size: 20px;
-        padding: 11px 34px;
-        margin-top: 20px;
+    .marco-pokemon.marco-bulbasaur {
+        width: 100%;
+        height: 250px;
+    }
+
+    .marco-personalizador {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 22px;
+    }
+
+    .etiqueta-tiempo {
+        font-size: 14px;
+    }
+
+    .btn-stepper {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+
+    .valor-tiempo span {
+        font-size: 22px;
+    }
+
+    .contenedor-acciones {
+        margin-top: 16px;
+        gap: 10px;
+    }
+
+    .boton-principal {
+        min-width: 190px;
+        font-size: 17px;
+        padding: 11px 32px;
+    }
+
+    .fila-botones-secundarios {
+        gap: 8px;
+    }
+
+    .boton-secundario {
+        min-width: 105px;
+        padding: 8px 12px;
+        font-size: 13px;
     }
 }

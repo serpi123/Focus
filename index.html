@@ -2,66 +2,303 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" conten="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title> FOCUS - MODO ESTUDIO</title>
+    <title>FOCUS - POKÉMON</title>
 
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <!--tipografia -->
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
+    <!-- Tipografía -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
 </head>
 
-<body class="tema-estudio">
-    <main id="pantalla-estudio" class="pantalla-estudio">
-        <h1 class="titulo">
+<body class="tema-auth">
+    <!-- =========================================
+         BARRA SUPERIOR (PERFIL Y LOGOUT)
+         ========================================= -->
+    <header id="barraSuperior" class="barra-superior oculta">
+        <div class="perfil-usuario">
+            <span class="icono-perfil">👤</span>
+            <span id="nombreUsuarioActivo" class="nombre-perfil">Entrenador</span>
+        </div>
+        <button id="btnCerrarSesion" class="btn-logout" type="button" title="Cerrar sesión">
+            <svg class="icono-btn" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Salir</span>
+        </button>
+    </header>
 
+    <!-- =========================================
+         PANTALLA DE AUTENTICACIÓN (CHARIZARD)
+         ========================================= -->
+    <main id="pantalla-auth" class="pantalla-estudio">
+        <div class="marco-auth">
+            <div class="auth-header">
+                <div class="avatar-auth">
+                    <img src="assets/charizard.gif"
+                         alt="Charizard, el pokemon de bienvenida"
+                         class="imagen-auth">
+                </div>
+                <h1 class="titulo-auth">FOCUS POKÉMON</h1>
+                <p class="subtitulo-auth">Tu espacio para estudiar y concentrarte</p>
+            </div>
+
+            <!-- Selector de pestañas -->
+            <div class="auth-tabs">
+                <button id="tabLogin" class="tab-btn activo" type="button">Iniciar Sesión</button>
+                <button id="tabRegister" class="tab-btn" type="button">Registrarse</button>
+            </div>
+
+            <!-- Formulario Iniciar Sesión -->
+            <form id="formLogin" class="form-auth">
+                <div class="campo-grupo">
+                    <label for="loginUsuario" class="label-auth">Usuario o Correo</label>
+                    <input type="text" id="loginUsuario" class="input-auth" placeholder="ej. serpi123" required autocomplete="username">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="loginPassword" class="label-auth">Contraseña</label>
+                    <input type="password" id="loginPassword" class="input-auth" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <p id="errorLogin" class="mensaje-error oculta"></p>
+
+                <button type="submit" class="boton-principal btn-auth">
+                    <span>Ingresar</span>
+                </button>
+
+                <button id="btnInvitado" type="button" class="btn-invitado">
+                    Continuar como Invitado
+                </button>
+            </form>
+
+            <!-- Formulario Registrarse -->
+            <form id="formRegister" class="form-auth oculta">
+                <div class="campo-grupo">
+                    <label for="regNombre" class="label-auth">Nombre o Apodo</label>
+                    <input type="text" id="regNombre" class="input-auth" placeholder="Tu nombre de entrenador" required autocomplete="name">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="regEmail" class="label-auth">Correo Electrónico</label>
+                    <input type="email" id="regEmail" class="input-auth" placeholder="tu@email.com" required autocomplete="email">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="regPassword" class="label-auth">Contraseña</label>
+                    <input type="password" id="regPassword" class="input-auth" placeholder="Mínimo 4 caracteres" required autocomplete="new-password">
+                </div>
+
+                <p id="errorRegister" class="mensaje-error oculta"></p>
+
+                <button type="submit" class="boton-principal btn-auth">
+                    <span>Crear Cuenta</span>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- =========================================
+         PANTALLA PRINCIPAL (BULBASAUR - CONFIGURACIÓN)
+         ========================================= -->
+    <main id="pantalla-principal" class="pantalla-estudio oculta">
+        <h1 class="titulo">
+            ESPACIO PRINCIPAL
+        </h1>
+
+        <div class="marco-pokemon marco-bulbasaur">
+            <img src="assets/WnES.gif"
+            alt="Bulbasaur, el pokemon de la pantalla principal"
+            class="imagen-pokemon">
+        </div>
+
+        <!-- Personalizador de horarios -->
+        <div class="marco-personalizador">
+            <div class="control-tiempo">
+                <span class="etiqueta-tiempo">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                    Tiempo de Estudio
+                </span>
+                <div class="stepper-tiempo">
+                    <button id="btnMenosEstudio" class="btn-stepper" type="button" aria-label="Restar minuto de estudio">−</button>
+                    <div class="valor-tiempo">
+                        <span id="displayMinutosEstudio">50</span>
+                        <small>min</small>
+                    </div>
+                    <button id="btnMasEstudio" class="btn-stepper" type="button" aria-label="Sumar minuto de estudio">+</button>
+                </div>
+            </div>
+
+            <div class="divisor-personalizador"></div>
+
+            <div class="control-tiempo">
+                <span class="etiqueta-tiempo">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                        <line x1="6" y1="1" x2="6" y2="4"/>
+                        <line x1="10" y1="1" x2="10" y2="4"/>
+                        <line x1="14" y1="1" x2="14" y2="4"/>
+                    </svg>
+                    Tiempo de Descanso
+                </span>
+                <div class="stepper-tiempo">
+                    <button id="btnMenosDescanso" class="btn-stepper" type="button" aria-label="Restar minuto de descanso">−</button>
+                    <div class="valor-tiempo">
+                        <span id="displayMinutosDescanso">10</span>
+                        <small>min</small>
+                    </div>
+                    <button id="btnMasDescanso" class="btn-stepper" type="button" aria-label="Sumar minuto de descanso">+</button>
+                </div>
+            </div>
+
+            <div class="divisor-personalizador"></div>
+
+            <!-- Accesos rápidos de intervalos clásicos -->
+            <div class="fila-presets">
+                <button id="btnPreset25" class="btn-preset" type="button">25 / 5 min</button>
+                <button id="btnPreset50" class="btn-preset" type="button">50 / 10 min</button>
+                <button id="btnPreset90" class="btn-preset" type="button">90 / 15 min</button>
+            </div>
+        </div>
+
+        <div class="contenedor-acciones">
+            <button id="btnIrEstudioDesdeBulbasaur" class="boton-principal" type="button">
+                <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span>Empezar estudio</span>
+            </button>
+
+            <div class="fila-botones-secundarios">
+                <button id="btnIrDescansoDesdeBulbasaur" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                    </svg>
+                    <span>Ir a descanso</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- =========================================
+         PANTALLA DE ESTUDIO (GENGAR)
+         ========================================= -->
+    <main id="pantalla-estudio" class="pantalla-estudio oculta">
+        <h1 class="titulo">
             ESPACIO DE ESTUDIO
         </h1>
         <div class="marco-temporizador">
             <span id="temporizador">50:00</span>
-
         </div>
-        <h2 class="subtitulo">
-            
-        </h2>
         <div class="marco-pokemon">
             <img src="assets/shiny-gengar-ig.gif"
-            alt="Gengar, el pokemon de modo estudi"
+            alt="Gengar, el pokemon de modo estudio"
             class="imagen-pokemon">
         </div>
 
-        <button id="botonInicio" class="boton-inicio">
-            Empezar
-        </button>
+        <div class="contenedor-acciones">
+            <button id="botonInicio" class="boton-principal" type="button">
+                <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span>Empezar estudio</span>
+            </button>
+
+            <div class="fila-botones-secundarios">
+                <button id="botonCambiarModo" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    <span>Modo Descanso</span>
+                </button>
+                <button id="botonReiniciar" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 12a8 8 0 1 1-8-8c2.2 0 4.2.9 5.7 2.3L20 8m0 0V3m0 5h-5"/>
+                    </svg>
+                    <span>Reiniciar</span>
+                </button>
+                <button id="botonAjustesEstudio" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span>Ajustes</span>
+                </button>
+            </div>
+        </div>
     </main>
-    <main id="pantalla-descanso" class="pantalla-estudio pantalla-descanso oculta">
+
+    <!-- =========================================
+         PANTALLA DE DESCANSO (SNORLAX)
+         ========================================= -->
+    <main id="pantalla-descanso" class="pantalla-estudio oculta">
         <h1 class="titulo">
             ESPACIO DE DESCANSO
         </h1>
         <div class="marco-temporizador">
             <span id="temporizador-descanso">10:00</span>
-
         </div>
-        <h2 class="subtitulo">
-            
-        </h2>
         <div class="marco-pokemon"> 
             <img src="assets/Pixel Eat Sticker.gif"
             alt="Snorlax, el pokemon de modo descanso"
             class="imagen-pokemon">
         </div>
-        <button id="botonDescanso" class="boton-inicio">
-            Empezar descanso
-        </button>
+
+        <div class="contenedor-acciones">
+            <button id="botonDescanso" class="boton-principal" type="button">
+                <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span>Empezar descanso</span>
+            </button>
+
+            <div class="fila-botones-secundarios">
+                <button id="botonCambiarModoDescanso" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    <span>Modo Estudio</span>
+                </button>
+                <button id="botonReiniciarDescanso" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 12a8 8 0 1 1-8-8c2.2 0 4.2.9 5.7 2.3L20 8m0 0V3m0 5h-5"/>
+                    </svg>
+                    <span>Reiniciar</span>
+                </button>
+                <button id="botonAjustesDescanso" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span>Ajustes</span>
+                </button>
+            </div>
+        </div>
     </main>
-<script src="script.js"></script>
 
+    <!-- =========================================
+         NOTIFICACIÓN TOAST (REEMPLAZO MODERNO DE ALERT)
+         ========================================= -->
+    <div id="notificacionToast" class="notificacion-toast oculta" role="status" aria-live="polite">
+        <div class="toast-icono" id="toastIcono">⏰</div>
+        <div class="toast-cuerpo">
+            <strong id="toastTitulo" class="toast-titulo">¡Tiempo finalizado!</strong>
+            <p id="toastMensaje" class="toast-mensaje">Sesión completada con éxito.</p>
+        </div>
+        <button id="toastCerrar" class="toast-cerrar" type="button" aria-label="Cerrar notificación">×</button>
+    </div>
+
+    <script src="script.js"></script>
 </body>
-</html>
-
-
 </html>
