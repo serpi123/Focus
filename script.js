@@ -16,10 +16,12 @@ const formRegister = document.getElementById("formRegister");
 const loginUsuario = document.getElementById("loginUsuario");
 const loginPassword = document.getElementById("loginPassword");
 const errorLogin = document.getElementById("errorLogin");
+const exitoLogin = document.getElementById("exitoLogin");
 const regNombre = document.getElementById("regNombre");
 const regEmail = document.getElementById("regEmail");
 const regPassword = document.getElementById("regPassword");
 const errorRegister = document.getElementById("errorRegister");
+const exitoRegister = document.getElementById("exitoRegister");
 const btnInvitado = document.getElementById("btnInvitado");
 
 // Pantalla Principal (Bulbasaur - Personalizador)
@@ -136,7 +138,8 @@ toastCerrar.addEventListener("click", cerrarNotificacion);
 function obtenerUsuariosRegistrados() {
     try {
         const datos = localStorage.getItem("focus_usuarios");
-        return datos ? JSON.parse(datos) : [];
+        const parsed = datos ? JSON.parse(datos) : [];
+        return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
         return [];
     }
@@ -172,13 +175,32 @@ function cerrarSesion() {
     mostrarNotificacion("👋", "Sesión cerrada", "Has vuelto a la pantalla de inicio.");
 }
 
+function limpiarMensajesAuth() {
+    if (errorLogin) {
+        errorLogin.textContent = "";
+        errorLogin.classList.add("oculta");
+    }
+    if (exitoLogin) {
+        exitoLogin.textContent = "";
+        exitoLogin.classList.add("oculta");
+    }
+    if (errorRegister) {
+        errorRegister.textContent = "";
+        errorRegister.classList.add("oculta");
+    }
+    if (exitoRegister) {
+        exitoRegister.textContent = "";
+        exitoRegister.classList.add("oculta");
+    }
+}
+
 // Pestañas Login / Registro
 tabLogin.addEventListener("click", () => {
     tabLogin.classList.add("activo");
     tabRegister.classList.remove("activo");
     formLogin.classList.remove("oculta");
     formRegister.classList.add("oculta");
-    errorLogin.classList.add("oculta");
+    limpiarMensajesAuth();
 });
 
 tabRegister.addEventListener("click", () => {
@@ -186,67 +208,142 @@ tabRegister.addEventListener("click", () => {
     tabLogin.classList.remove("activo");
     formRegister.classList.remove("oculta");
     formLogin.classList.add("oculta");
-    errorRegister.classList.add("oculta");
+    limpiarMensajesAuth();
 });
 
 // Evento Submit: Iniciar Sesión
 formLogin.addEventListener("submit", (e) => {
     e.preventDefault();
+    limpiarMensajesAuth();
+
     const ident = loginUsuario.value.trim().toLowerCase();
     const pass = loginPassword.value;
 
+    if (!ident) {
+        errorLogin.textContent = "Por favor, ingresa tu usuario o correo.";
+        errorLogin.classList.remove("oculta");
+        loginUsuario.focus();
+        return;
+    }
+
+    if (!pass) {
+        errorLogin.textContent = "Por favor, ingresa tu contraseña.";
+        errorLogin.classList.remove("oculta");
+        loginPassword.focus();
+        return;
+    }
+
     const usuarios = obtenerUsuariosRegistrados();
-    const usuarioValido = usuarios.find(
-        (u) => (u.usuario.toLowerCase() === ident || u.email.toLowerCase() === ident) && u.password === pass
+
+    // 1. Verificar si el usuario o correo existe
+    const usuarioEncontrado = usuarios.find(
+        (u) => (u.usuario && u.usuario.toLowerCase() === ident) ||
+               (u.email && u.email.toLowerCase() === ident)
     );
 
-    if (usuarioValido) {
-        errorLogin.classList.add("oculta");
-        formLogin.reset();
-        iniciarSesionConUsuario(usuarioValido);
-        mostrarNotificacion("✨", `¡Hola de nuevo, ${usuarioValido.nombre}!`, "Listo para concentrarte hoy.");
-    } else {
-        errorLogin.textContent = "Usuario/correo o contraseña incorrectos.";
+    if (!usuarioEncontrado) {
+        errorLogin.textContent = "El usuario o correo no está registrado.";
         errorLogin.classList.remove("oculta");
+        loginUsuario.focus();
+        return;
     }
+
+    // 2. Verificar si la contraseña es correcta
+    if (usuarioEncontrado.password !== pass) {
+        errorLogin.textContent = "Contraseña incorrecta. Por favor, verifica tus datos.";
+        errorLogin.classList.remove("oculta");
+        loginPassword.focus();
+        loginPassword.select();
+        return;
+    }
+
+    // 3. Credenciales correctas: Iniciar sesión
+    formLogin.reset();
+    limpiarMensajesAuth();
+    iniciarSesionConUsuario(usuarioEncontrado);
+    mostrarNotificacion("✨", `¡Hola de nuevo, ${usuarioEncontrado.nombre || usuarioEncontrado.usuario}!`, "Listo para concentrarte hoy.");
 });
 
 // Evento Submit: Registro
 formRegister.addEventListener("submit", (e) => {
     e.preventDefault();
+    limpiarMensajesAuth();
+
     const nombre = regNombre.value.trim();
     const email = regEmail.value.trim().toLowerCase();
     const pass = regPassword.value;
 
+    if (!nombre) {
+        errorRegister.textContent = "Por favor, ingresa tu nombre o apodo.";
+        errorRegister.classList.remove("oculta");
+        regNombre.focus();
+        return;
+    }
+
+    if (!email || !email.includes("@")) {
+        errorRegister.textContent = "Por favor, ingresa un correo electrónico válido.";
+        errorRegister.classList.remove("oculta");
+        regEmail.focus();
+        return;
+    }
+
     if (pass.length < 4) {
         errorRegister.textContent = "La contraseña debe tener al menos 4 caracteres.";
         errorRegister.classList.remove("oculta");
+        regPassword.focus();
         return;
     }
 
     const usuarios = obtenerUsuariosRegistrados();
-    const yaExiste = usuarios.some((u) => u.email.toLowerCase() === email || u.usuario.toLowerCase() === nombre.toLowerCase());
 
-    if (yaExiste) {
-        errorRegister.textContent = "Ya existe un entrenador con ese nombre o correo.";
+    // Comprobar si ya existe el nombre o correo
+    const yaExisteUsuario = usuarios.some((u) => u.usuario && u.usuario.toLowerCase() === nombre.toLowerCase());
+    if (yaExisteUsuario) {
+        errorRegister.textContent = "Ya existe un entrenador con ese nombre o usuario.";
         errorRegister.classList.remove("oculta");
+        regNombre.focus();
         return;
     }
 
+    const yaExisteEmail = usuarios.some((u) => u.email && u.email.toLowerCase() === email);
+    if (yaExisteEmail) {
+        errorRegister.textContent = "Ya existe una cuenta registrada con ese correo electrónico.";
+        errorRegister.classList.remove("oculta");
+        regEmail.focus();
+        return;
+    }
+
+    // Guardar nuevo usuario
     const nuevoUsuario = {
         usuario: nombre,
         nombre: nombre,
         email: email,
-        password: pass
+        password: pass,
+        fechaRegistro: new Date().toISOString()
     };
 
     usuarios.push(nuevoUsuario);
     guardarUsuariosRegistrados(usuarios);
 
-    errorRegister.classList.add("oculta");
+    // Limpiar formulario de registro
     formRegister.reset();
-    iniciarSesionConUsuario(nuevoUsuario);
-    mostrarNotificacion("🎉", `¡Bienvenido a FOCUS, ${nombre}!`, "Tu cuenta fue creada con éxito.");
+
+    // Cambiar a la pestaña de Iniciar Sesión para que el usuario ingrese
+    tabLogin.classList.add("activo");
+    tabRegister.classList.remove("activo");
+    formLogin.classList.remove("oculta");
+    formRegister.classList.add("oculta");
+
+    // Autocompletar el campo de usuario y dar foco a la contraseña
+    loginUsuario.value = nombre;
+    loginPassword.value = "";
+    loginPassword.focus();
+
+    // Avisar en el formulario y con notificación que la cuenta se creó exitosamente
+    exitoLogin.textContent = `¡Cuenta creada con éxito! Bienvenido, ${nombre}. Ingresa tu contraseña para entrar.`;
+    exitoLogin.classList.remove("oculta");
+
+    mostrarNotificacion("🎉", "¡Cuenta creada con éxito!", `Entrenador ${nombre}, tu cuenta está lista. Ya puedes iniciar sesión.`);
 });
 
 // Continuar como Invitado
@@ -334,6 +431,7 @@ function cambiarModo(nuevoModo, autoIniciar = false) {
         barraSuperior.classList.add("oculta");
         document.body.className = "tema-auth";
         document.title = "FOCUS - INICIAR SESIÓN";
+        limpiarMensajesAuth();
     } else if (modoActual === "principal") {
         pantallaPrincipal.classList.remove("oculta");
         barraSuperior.classList.remove("oculta");
