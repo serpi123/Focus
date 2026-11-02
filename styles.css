@@ -2,161 +2,239 @@
     box-sizing: border-box;
 }
 
-body{
+body {
     margin: 0;
     min-height: 100vh;
-    background-color:#C5B5FF;
-    font-family: "Fredoka", "Comic Sans MS", sans-serif;
-
+    font-family: "Fredoka", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #d8cbff 0%, #b39bf7 100%);
+    transition: background 0.5s ease;
+    overflow-x: hidden;
 }
 
-.pantalla-estudio{
+/* --- TEMAS DE FONDO CON DEGRADADO SUTIL --- */
+body.tema-estudio {
+    background: linear-gradient(135deg, #d8cbff 0%, #b39bf7 100%);
+}
+
+body.tema-descanso {
+    background: linear-gradient(135deg, #d4effc 0%, #9bd0f5 100%);
+}
+
+/* --- CONTENEDOR PRINCIPAL DE PANTALLA --- */
+.pantalla-estudio {
     min-height: 100vh;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 35px 20px 30px;
-    
+    justify-content: center;
+    padding: 30px 20px 40px;
 }
-.titulo{
-    margin: 8px 0 20px;
+
+/* --- TÍTULO PRINCIPAL --- */
+.titulo {
+    margin: 0 0 20px;
     text-align: center;
-    color:white;
-    font-size: clamp(20px,2.5vw,30px);
-    font-weight: 800;
-    -webkit-text-stroke: 1px black;
-    text-shadow: 2px 2px 0 black;
+    color: #ffffff;
+    font-size: clamp(36px, 2.6vw, 32px);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
-.marco-temporizador{
-    width:380px;
+
+/* --- TARJETA DEL TEMPORIZADOR (EFECTO CRISTAL / GLASSMORPHISM) --- */
+.marco-temporizador {
+    width: 370px;
     max-width: 90%;
-    min-height: 128px;
+    min-height: 115px;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 10px solid #8050EA;
-    padding: 0 15px;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    border-radius: 28px;
+    box-shadow: 0 12px 30px rgba(108, 60, 224, 0.16),
+                0 2px 6px rgba(0, 0, 0, 0.04);
+    padding: 10px 25px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-#temporizador{
-    color:#8050EA;
-    font-size: clamp(60px, 9vw, 105px);
-    font-weight: 800;
+.marco-temporizador:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(108, 60, 224, 0.22);
+}
+
+/* Dígitos del reloj */
+#temporizador,
+#temporizador-descanso {
+    color: #6C3CE0;
+    font-size: clamp(64px, 8.5vw, 98px);
+    font-weight: 700;
     line-height: 1;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
-    -webkit-text-stroke: 1px black;
-}
-#temporizador-descanso{
-    color:#1B4965;
-    font-size: clamp(60px, 9vw, 105px);
-    font-weight: 800;
-    line-height: 1;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    -webkit-text-stroke: 1px black;
-}
-.subtitulo{
-    margin:27px 0 8px;
-    color:#8050EA;
-    font-size: 27px;
-    text-align: center;;
-    -webkit-text-stroke: 0.7px black;;
-    text-align: center;
-    -webkit-text-stroke: 0.7px black;
+    letter-spacing: 2px;
 }
 
-.marco-pokemon{
-    width:530px;
-    column-height:407px;
+/* --- SUBTÍTULO --- */
+.subtitulo {
+    margin: 24px 0 14px;
+    color: #6C3CE0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.6);
+}
+
+/* --- TARJETA DEL POKÉMON --- */
+.marco-pokemon {
+    width: 480px;
+    height: 380px;
     max-width: 90vw;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 11px solid #8050EA;
-    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    border-radius: 32px;
+    box-shadow: 0 14px 35px rgba(108, 60, 224, 0.16),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.imagen-pokemon{
+
+.marco-pokemon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px rgba(108, 60, 224, 0.22);
+}
+
+.imagen-pokemon {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.12));
+    transition: transform 0.3s ease;
 }
 
-.boton-inicio{
-    margin: 21px;
-    padding: 7px 13px;
-    background-color: transparent;
-    border: 9px solid #8050EA;
-    border-radius: 11px;
-    color:white;
-    font-family:inherit;
-    color: white;
-    font-family: inherit;
-    font-size: 34px;
-    font-weight: 800;
-    -webkit-text-stroke: 1px black;
-    text-shadow: 1px 1px 0 black;
-    cursor: pointer;
-    transition:transform 0.2s,background-color 0.2s;
-    transition: transform 0.2s, background-color 0.2s;
-}
-
-.boton-inicio:hover {
-    background-color: rgba(128, 80, 234, 0.12);
+.imagen-pokemon:hover {
     transform: scale(1.04);
 }
 
+/* --- BOTÓN MODERNO TIPO PÍLDORA (ELEVACIÓN & SOMBRA) --- */
+.boton-inicio {
+    margin-top: 26px;
+    padding: 13px 44px;
+    background-color: #6C3CE0;
+    border: none;
+    border-radius: 50px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(108, 60, 224, 0.4),
+                0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.boton-inicio:hover {
+    background-color: #5b2fd4;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(108, 60, 224, 0.52);
+}
 
 .boton-inicio:active {
-    transform: scale(0.97);
+    transform: translateY(1px);
+    box-shadow: 0 4px 12px rgba(108, 60, 224, 0.3);
 }
-/* OCULTAR PANTALLAS */
-.oculta{
-    display: none !important;
+
+/* =========================================
+   TEMA DESCANSO (SNORLAX - CELESTE & AZUL MARINO)
+   ========================================= */
+.tema-descanso .marco-temporizador {
+    background: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 12px 30px rgba(27, 73, 101, 0.15),
+                0 2px 6px rgba(0, 0, 0, 0.04);
 }
-/* TEMA SNORLAX */
-.pantalla-descanso .marco-temporizador,
-.pantalla-descanso .marco-pokemon,
-.pantalla-descanso .boton-inicio {
-    border-color: #1B4965;
+
+.tema-descanso .marco-temporizador:hover {
+    box-shadow: 0 16px 36px rgba(27, 73, 101, 0.22);
 }
-.boton-inicio:hover #temporizador-descanso,
-.pantalla-descanso .subtitulo {
+
+.tema-descanso #temporizador-descanso {
     color: #1B4965;
 }
-.pantalla-descanso .boton-inicio:hover {
-    background-color: rgba(27, 73, 101, 0.15);
-}
-/* Adaptación a pantallas pequeñas */
-@media (max-width: 600px) {
 
+.tema-descanso .subtitulo {
+    color: #1B4965;
+}
+
+.tema-descanso .marco-pokemon {
+    background: rgba(255, 255, 255, 0.58);
+    box-shadow: 0 14px 35px rgba(27, 73, 101, 0.16),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+}
+
+.tema-descanso .marco-pokemon:hover {
+    box-shadow: 0 18px 40px rgba(27, 73, 101, 0.22);
+}
+
+.tema-descanso .boton-inicio {
+    background-color: #1B4965;
+    box-shadow: 0 8px 24px rgba(27, 73, 101, 0.38),
+                0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tema-descanso .boton-inicio:hover {
+    background-color: #14374d;
+    box-shadow: 0 12px 28px rgba(27, 73, 101, 0.48);
+}
+
+.tema-descanso .boton-inicio:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 12px rgba(27, 73, 101, 0.3);
+}
+
+/* --- CLASE UTILITARIA PARA OCULTAR --- */
+.oculta {
+    display: none !important;
+}
+
+/* --- RESPONSIVE / PANTALLAS PEQUEÑAS --- */
+@media (max-width: 600px) {
     .pantalla-estudio {
-        padding: 25px 12px;
-        padding: 20px 12px;
+        padding: 20px 14px 30px;
     }
 
     .titulo {
-        margin-bottom: 25px;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
 
     .marco-temporizador {
-        min-height: 100px;
-        border-width: 7px;
+        min-height: 95px;
+        border-radius: 22px;
     }
 
     .subtitulo {
-        font-size: 23px;
+        font-size: 19px;
+        margin: 18px 0 10px;
     }
 
     .marco-pokemon {
+        width: 100%;
         height: 300px;
-        border-width: 8px;
+        border-radius: 24px;
     }
 
     .boton-inicio {
-        font-size: 27px;
-        border-width: 7px;
+        font-size: 20px;
+        padding: 11px 34px;
+        margin-top: 20px;
     }
 }

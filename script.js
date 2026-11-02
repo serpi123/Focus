@@ -38,7 +38,7 @@ function cambiarModo(nuevoModo){
         //ocultar gengar y mostrar snorlax
         pantallaEstudio.classList.add("oculta");
         pantallaDescanso.classList.remove("oculta");
-        document.body.style.backgroundColor="#BBE1FA";;
+        document.body.className = "tema-descanso";
 
         segundosRestantes=tiempoDescanso;
         actualizarTemporizador();
@@ -51,7 +51,7 @@ function cambiarModo(nuevoModo){
         //volvert a gengar
         pantallaDescanso.classList.add("oculta");
         pantallaEstudio.classList.remove("oculta");
-        document.body.style.backgroundColor="#C5B5FF";
+        document.body.className = "tema-estudio";
         segundosRestantes=tiempoEstudio;
         actualizarTemporizador();
         botonInicio.textContent="Empezar";
