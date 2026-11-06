@@ -1,18 +1,18 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Política de seguridad para desarrollo en Electron -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;">
+
     <title>FOCUS - POKÉMON</title>
 
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <!-- Tipografía -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body class="tema-auth">
@@ -41,9 +41,7 @@
         <div class="marco-auth">
             <div class="auth-header">
                 <div class="avatar-auth">
-                    <img src="assets/charizard.gif"
-                         alt="Charizard, el pokemon de bienvenida"
-                         class="imagen-auth">
+                    <img src="assets/charizard.gif" alt="Charizard, el pokemon de bienvenida" class="imagen-auth">
                 </div>
                 <h1 class="titulo-auth">FOCUS POKÉMON</h1>
                 <p class="subtitulo-auth">Tu espacio para estudiar y concentrarte</p>
@@ -115,13 +113,12 @@
         </h1>
 
         <div class="marco-pokemon marco-bulbasaur">
-            <img src="assets/WnES.gif"
-            alt="Bulbasaur, el pokemon de la pantalla principal"
-            class="imagen-pokemon">
+            <img src="assets/WnES.gif" alt="Bulbasaur, el pokemon de la pantalla principal" class="imagen-pokemon">
         </div>
 
         <!-- Personalizador de horarios -->
         <div class="marco-personalizador">
+            <!-- Fila 1: Tiempo de Estudio -->
             <div class="control-tiempo">
                 <span class="etiqueta-tiempo">
                     <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -142,6 +139,7 @@
 
             <div class="divisor-personalizador"></div>
 
+            <!-- Fila 2: Tiempo de Descanso -->
             <div class="control-tiempo">
                 <span class="etiqueta-tiempo">
                     <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -165,7 +163,25 @@
 
             <div class="divisor-personalizador"></div>
 
-            <!-- Accesos rápidos de intervalos clásicos -->
+            <!-- Fila 3: Configuración Ventana Flotante -->
+            <div class="control-tiempo">
+                <span class="etiqueta-tiempo">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                    </svg>
+                    Ventana Flotante
+                </span>
+                <select id="selectModoPop" class="select-personalizador">
+                    <option value="inicio">Al empezar el tiempo</option>
+                    <option value="boton">Manual (con botón)</option>
+                    <option value="minimizar">Al minimizar la app</option>
+                </select>
+            </div>
+
+            <div class="divisor-personalizador"></div>
+
+            <!-- Fila 4: Accesos rápidos -->
             <div class="fila-presets">
                 <button id="btnPreset25" class="btn-preset" type="button">25 / 5 min</button>
                 <button id="btnPreset50" class="btn-preset" type="button">50 / 10 min</button>
@@ -204,9 +220,7 @@
             <span id="temporizador">50:00</span>
         </div>
         <div class="marco-pokemon">
-            <img src="assets/shiny-gengar-ig.gif"
-            alt="Gengar, el pokemon de modo estudio"
-            class="imagen-pokemon">
+            <img src="assets/shiny-gengar-ig.gif" alt="Gengar, el pokemon de modo estudio" class="imagen-pokemon">
         </div>
 
         <div class="contenedor-acciones">
@@ -237,6 +251,12 @@
                     </svg>
                     <span>Ajustes</span>
                 </button>
+                <button id="btnPopTemporizador" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    </svg>
+                    <span>Flotante</span>
+                </button>
             </div>
         </div>
     </main>
@@ -252,9 +272,7 @@
             <span id="temporizador-descanso">10:00</span>
         </div>
         <div class="marco-pokemon"> 
-            <img src="assets/Pixel Eat Sticker.gif"
-            alt="Snorlax, el pokemon de modo descanso"
-            class="imagen-pokemon">
+            <img src="assets/Pixel Eat Sticker.gif" alt="Snorlax, el pokemon de modo descanso" class="imagen-pokemon">
         </div>
 
         <div class="contenedor-acciones">
@@ -285,12 +303,18 @@
                     </svg>
                     <span>Ajustes</span>
                 </button>
+                <button id="btnPopTemporizadorDescanso" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    </svg>
+                    <span>Flotante</span>
+                </button>
             </div>
         </div>
     </main>
 
     <!-- =========================================
-         NOTIFICACIÓN TOAST (REEMPLAZO MODERNO DE ALERT)
+         NOTIFICACIÓN TOAST
          ========================================= -->
     <div id="notificacionToast" class="notificacion-toast oculta" role="status" aria-live="polite">
         <div class="toast-icono" id="toastIcono">⏰</div>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Temporizador FOCUS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent; /* Importante: deja pasar la transparencia de Electron */
+            overflow: hidden;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4px;
+            -webkit-app-region: drag; /* Mantiene la ventana arrastrable */
+        }
+        .tarjeta-reloj {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Fondo semitransparente (El último valor 0.65 es el nivel de opacidad) */
+            background: rgba(31, 13, 5, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .reloj-mini {
+            font-size: 40px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 2px;
+            font-family: 'Fredoka', -apple-system, sans-serif;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="tarjeta-reloj">
+        <div class="reloj-mini" id="displayMini">50:00</div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require("electron");
+        const displayMini = document.getElementById("displayMini");
+
+        ipcRenderer.on("sincronizar-tiempo", (event, nuevoTiempo) => {
+            displayMini.textContent = nuevoTiempo;
+        });
+    </script>
+</body>
+</html>

@@ -958,3 +958,22 @@ body.tema-descanso {
         font-size: 13px;
     }
 }
+.select-personalizador {
+    max-width: 170px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1.5px solid #52b788;
+    border-radius: 12px;
+    color: #1b4332;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.select-personalizador:hover {
+    background: #ffffff;
+    border-color: #2d6a4f;
+}
