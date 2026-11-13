@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
 
@@ -76,11 +76,13 @@ function crearVentanaJuegos() {
     }
 
     ventanaJuegos = new BrowserWindow({
-        width: 700,
-        height: 650,
+        width: 820,
+        height: 800,
+        minWidth: 700,
+        minHeight: 650,
         title: "FOCUS - Sala de Juegos",
         backgroundColor: "#d4effc",
-        resizable: false,
+        resizable: true,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -133,6 +135,64 @@ ipcMain.on("toggle-pop-temporizador", () => {
 // 3. NUEVO: Escuchador para el botón de "Minijuego"
 ipcMain.on("abrir-ventana-juegos", () => {
     crearVentanaJuegos();
+});
+
+// 4. NUEVO: Selección de archivo .exe y extracción de su icono
+ipcMain.handle("seleccionar-archivo-exe", async () => {
+    if (!ventanaPrincipal) return null;
+    try {
+        const resultado = await dialog.showOpenDialog(ventanaPrincipal, {
+            title: "Seleccionar aplicación a bloquear",
+            properties: ["openFile"],
+            filters: [
+                { name: "Archivos Ejecutables (*.exe)", extensions: ["exe"] },
+                { name: "Todos los archivos (*.*)", extensions: ["*"] }
+            ]
+        });
+
+        if (resultado.canceled || !resultado.filePaths || resultado.filePaths.length === 0) {
+            return null;
+        }
+
+        const rutaCompleta = resultado.filePaths[0];
+        const nombreArchivo = path.basename(rutaCompleta);
+        const nombreLimpio = nombreArchivo.replace(/\.exe$/i, "");
+        let iconoBase64 = null;
+
+        try {
+            let nativeIcon = await app.getFileIcon(rutaCompleta, { size: "large" });
+            if (!nativeIcon || nativeIcon.isEmpty()) {
+                nativeIcon = await app.getFileIcon(rutaCompleta, { size: "normal" });
+            }
+            if (nativeIcon && !nativeIcon.isEmpty()) {
+                const dataUrl = nativeIcon.toDataURL();
+                if (dataUrl && dataUrl.length > 60) {
+                    iconoBase64 = dataUrl;
+                }
+            }
+        } catch (errIcono) {
+            console.warn("No se pudo extraer el icono:", errIcono.message);
+        }
+
+        return {
+            ruta: rutaCompleta,
+            archivo: nombreArchivo,
+            nombre: nombreLimpio,
+            icono: iconoBase64
+        };
+    } catch (e) {
+        console.error("Error al abrir diálogo de archivos:", e);
+        return null;
+    }
+});
+
+ipcMain.handle("obtener-icono-exe", async (event, ruta) => {
+    try {
+        const nativeIcon = await app.getFileIcon(ruta, { size: "normal" });
+        return nativeIcon ? nativeIcon.toDataURL() : null;
+    } catch (e) {
+        return null;
+    }
 });
 
 app.whenReady().then(crearVentana);
