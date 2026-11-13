@@ -1,8 +1,10 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
 
 let ventanaPrincipal = null;
 let ventanaTemporizador = null;
+let ventanaJuegos = null; // 1. NUEVO: Variable para la ventana de juegos
 
 let modoPopActual = "inicio";
 let temporizadorEnEjecucion = false;
@@ -66,6 +68,33 @@ function crearVentanaTemporizador() {
     });
 }
 
+// 2. NUEVO: Función para crear y mostrar la sala de juegos
+function crearVentanaJuegos() {
+    if (ventanaJuegos) {
+        ventanaJuegos.focus(); // Si ya está abierta, la trae al frente
+        return;
+    }
+
+    ventanaJuegos = new BrowserWindow({
+        width: 700,
+        height: 650,
+        title: "FOCUS - Sala de Juegos",
+        backgroundColor: "#d4effc",
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    ventanaJuegos.setMenu(null);
+    ventanaJuegos.loadFile(path.join(__dirname, "juegos.html"));
+
+    ventanaJuegos.on("closed", () => {
+        ventanaJuegos = null;
+    });
+}
+
 // Comunicaciones IPC
 ipcMain.on("abrir-pop-temporizador", () => {
     crearVentanaTemporizador();
@@ -92,12 +121,6 @@ ipcMain.on("actualizar-tiempo", (event, tiempoTexto) => {
     }
 });
 
-app.whenReady().then(crearVentana);
-
-app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") app.quit();
-});
-
 ipcMain.on("toggle-pop-temporizador", () => {
     if (ventanaTemporizador) {
         ventanaTemporizador.close();
@@ -105,4 +128,15 @@ ipcMain.on("toggle-pop-temporizador", () => {
     } else {
         crearVentanaTemporizador();
     }
+});
+
+// 3. NUEVO: Escuchador para el botón de "Minijuego"
+ipcMain.on("abrir-ventana-juegos", () => {
+    crearVentanaJuegos();
+});
+
+app.whenReady().then(crearVentana);
+
+app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") app.quit();
 });

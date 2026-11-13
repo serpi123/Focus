@@ -95,7 +95,7 @@ body.tema-descanso {
 }
 
 /* =========================================
-   PANTALLA DE AUTENTICACIÓN (TEMA CHARIZARD)
+   PANTALLA DE AUTENTICACIÓN
    ========================================= */
 .marco-auth {
     width: 440px;
@@ -175,7 +175,6 @@ body.tema-descanso {
     font-weight: 500;
 }
 
-/* Tabs: Login / Register (Colores de fuego y ámbar) */
 .auth-tabs {
     display: flex;
     background: rgba(0, 0, 0, 0.32);
@@ -209,7 +208,6 @@ body.tema-descanso {
     box-shadow: 0 4px 14px rgba(230, 58, 0, 0.3);
 }
 
-/* Formularios */
 .form-auth {
     display: flex;
     flex-direction: column;
@@ -316,17 +314,6 @@ body.tema-descanso {
     animation: fadeInMsg 0.25s ease;
 }
 
-@keyframes fadeInMsg {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* =========================================
    CONTENEDOR PRINCIPAL DE PANTALLA
    ========================================= */
@@ -340,7 +327,6 @@ body.tema-descanso {
     padding: 24px 20px 32px;
 }
 
-/* --- TÍTULO PRINCIPAL --- */
 .titulo {
     margin: 0 0 16px;
     text-align: center;
@@ -355,7 +341,7 @@ body.tema-descanso {
     text-shadow: 0 4px 14px rgba(27, 67, 50, 0.22);
 }
 
-/* --- TARJETA DEL TEMPORIZADOR (GLASSMORPHISM) --- */
+/* --- TARJETA DEL TEMPORIZADOR --- */
 .marco-temporizador {
     width: 370px;
     max-width: 90%;
@@ -379,7 +365,6 @@ body.tema-descanso {
     box-shadow: 0 16px 36px rgba(108, 60, 224, 0.22);
 }
 
-/* Dígitos del reloj */
 #temporizador,
 #temporizador-descanso {
     color: #6C3CE0;
@@ -445,8 +430,8 @@ body.tema-descanso {
    TARJETA DEL PERSONALIZADOR (TEMA BULBASAUR)
    ========================================= */
 .marco-personalizador {
-    width: 440px;
-    max-width: 90vw;
+    width: 460px;
+    max-width: 92vw;
     margin-top: 14px;
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(14px);
@@ -551,6 +536,26 @@ body.tema-descanso {
     width: 100%;
 }
 
+.select-personalizador {
+    max-width: 200px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1.5px solid #52b788;
+    border-radius: 12px;
+    color: #1b4332;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.select-personalizador:hover, .select-personalizador:focus {
+    background: #ffffff;
+    border-color: #2d6a4f;
+}
+
 .fila-presets {
     display: flex;
     gap: 8px;
@@ -598,7 +603,7 @@ body.tema-descanso {
     flex-shrink: 0;
 }
 
-/* --- BOTÓN PRINCIPAL (PLAY / PAUSA / REANUDAR) --- */
+/* --- BOTÓN PRINCIPAL --- */
 .boton-principal {
     min-width: 220px;
     padding: 13px 44px;
@@ -678,7 +683,7 @@ body.tema-descanso {
 }
 
 /* =========================================
-   TEMA BULBASAUR - ADAPTACIONES ESPECÍFICAS
+   TEMA BULBASAUR
    ========================================= */
 .tema-bulbasaur .boton-principal {
     background: linear-gradient(135deg, #40916c 0%, #2d6a4f 100%);
@@ -715,7 +720,7 @@ body.tema-descanso {
 }
 
 /* =========================================
-   TEMA DESCANSO (SNORLAX - CELESTE & AZUL MARINO)
+   TEMA DESCANSO (SNORLAX)
    ========================================= */
 .tema-descanso .marco-temporizador {
     background: rgba(255, 255, 255, 0.62);
@@ -776,7 +781,7 @@ body.tema-descanso {
 }
 
 /* =========================================
-   NOTIFICACIÓN TOAST (REEMPLAZO DE ALERT)
+   NOTIFICACIÓN TOAST
    ========================================= */
 .notificacion-toast {
     position: fixed;
@@ -851,129 +856,64 @@ body.tema-descanso {
     transform: scale(1.15);
 }
 
-/* --- CLASE UTILITARIA PARA OCULTAR --- */
+/* --- CLASE UTILITARIA --- */
 .oculta {
     display: none !important;
 }
 
-/* --- RESPONSIVE / PANTALLAS PEQUEÑAS --- */
-@media (max-width: 600px) {
-    .barra-superior {
-        top: 12px;
-        right: 12px;
-        padding: 4px 10px 4px 8px;
+@keyframes fadeInMsg {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
     }
-
-    .nombre-perfil {
-        max-width: 90px;
-        font-size: 13px;
-    }
-
-    .notificacion-toast {
-        top: 14px;
-        right: 14px;
-        left: 14px;
-        min-width: auto;
-        max-width: none;
-    }
-
-    .marco-auth {
-        padding: 22px 18px 20px;
-        border-radius: 24px;
-    }
-
-    .avatar-auth {
-        width: 100px;
-        height: 100px;
-    }
-
-    .titulo-auth {
-        font-size: 22px;
-    }
-
-    .pantalla-estudio {
-        padding: 18px 12px 24px;
-    }
-
-    .titulo {
-        margin-bottom: 12px;
-        font-size: 26px;
-    }
-
-    .marco-temporizador {
-        min-height: 90px;
-        border-radius: 22px;
-    }
-
-    .marco-pokemon {
-        width: 100%;
-        height: 270px;
-        border-radius: 24px;
-        margin-top: 12px;
-    }
-
-    .marco-pokemon.marco-bulbasaur {
-        width: 100%;
-        height: 250px;
-    }
-
-    .marco-personalizador {
-        width: 100%;
-        padding: 14px 16px;
-        border-radius: 22px;
-    }
-
-    .etiqueta-tiempo {
-        font-size: 14px;
-    }
-
-    .btn-stepper {
-        width: 32px;
-        height: 32px;
-        font-size: 18px;
-    }
-
-    .valor-tiempo span {
-        font-size: 22px;
-    }
-
-    .contenedor-acciones {
-        margin-top: 16px;
-        gap: 10px;
-    }
-
-    .boton-principal {
-        min-width: 190px;
-        font-size: 17px;
-        padding: 11px 32px;
-    }
-
-    .fila-botones-secundarios {
-        gap: 8px;
-    }
-
-    .boton-secundario {
-        min-width: 105px;
-        padding: 8px 12px;
-        font-size: 13px;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
-.select-personalizador {
-    max-width: 170px;
-    padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1.5px solid #52b788;
+
+/* =========================================
+   ESTILOS DEL MINIJUEGO (TRES EN RAYA)
+   ========================================= */
+#contenedor-minijuego {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    padding: 15px;
+    margin-top: 15px;
+    box-shadow: 0 10px 25px rgba(27, 73, 101, 0.15);
+    animation: fadeInMsg 0.3s ease;
+}
+
+.tablero-tictactoe {
+    display: grid;
+    grid-template-columns: repeat(3, 70px);
+    grid-template-rows: repeat(3, 70px);
+    gap: 8px;
+    justify-content: center;
+}
+
+.celda-ttt {
+    background: rgba(255, 255, 255, 0.8);
     border-radius: 12px;
-    color: #1b4332;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    outline: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+    font-weight: bold;
+    color: #1B4965;
     cursor: pointer;
-    transition: all 0.2s ease;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+    transition: background 0.2s, transform 0.1s;
 }
 
-.select-personalizador:hover {
+.celda-ttt:hover {
     background: #ffffff;
-    border-color: #2d6a4f;
+    transform: scale(1.05);
+}
+
+.celda-ttt.ocupada {
+    cursor: default;
+    transform: none;
 }

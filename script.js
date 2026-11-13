@@ -1,10 +1,12 @@
 // =========================================
-// INTEGRACIÓN CON ELECTRON (IPC)
+// INTEGRACIÓN CON ELECTRON (IPC Y PROCESOS)
 // =========================================
 let ipcRenderer = null;
+let exec = null;
 try {
     const electron = require("electron");
     ipcRenderer = electron.ipcRenderer;
+    exec = require("child_process").exec;
 } catch (e) {
     console.warn("Ejecutando fuera del entorno de Electron.");
 }
@@ -13,12 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================
     // ELEMENTOS DEL DOM
     // =========================================
-    // Barra superior (Perfil)
     const barraSuperior = document.getElementById("barraSuperior");
     const nombreUsuarioActivo = document.getElementById("nombreUsuarioActivo");
     const btnCerrarSesion = document.getElementById("btnCerrarSesion");
 
-    // Pantalla de Autenticación
+    // Autenticación
     const pantallaAuth = document.getElementById("pantalla-auth");
     const tabLogin = document.getElementById("tabLogin");
     const tabRegister = document.getElementById("tabRegister");
@@ -35,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const exitoRegister = document.getElementById("exitoRegister");
     const btnInvitado = document.getElementById("btnInvitado");
 
-    // Pantalla Principal (Bulbasaur - Personalizador)
+    // Principal (Bulbasaur)
     const pantallaPrincipal = document.getElementById("pantalla-principal");
     const btnMenosEstudio = document.getElementById("btnMenosEstudio");
     const btnMasEstudio = document.getElementById("btnMasEstudio");
@@ -46,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const displayMinutosDescanso = document.getElementById("displayMinutosDescanso");
 
     const selectModoPop = document.getElementById("selectModoPop");
+    const inputAppsBloqueadas = document.getElementById("inputAppsBloqueadas");
 
     const btnPreset25 = document.getElementById("btnPreset25");
     const btnPreset50 = document.getElementById("btnPreset50");
@@ -54,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnIrEstudioDesdeBulbasaur = document.getElementById("btnIrEstudioDesdeBulbasaur");
     const btnIrDescansoDesdeBulbasaur = document.getElementById("btnIrDescansoDesdeBulbasaur");
 
-    // Pantalla de Estudio (Gengar)
+    // Estudio (Gengar)
     const pantallaEstudio = document.getElementById("pantalla-estudio");
     const temporizador = document.getElementById("temporizador");
     const botonInicio = document.getElementById("botonInicio");
@@ -63,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const botonAjustesEstudio = document.getElementById("botonAjustesEstudio");
     const btnPopTemporizador = document.getElementById("btnPopTemporizador");
 
-    // Pantalla de Descanso (Snorlax)
+    // Descanso (Snorlax)
     const pantallaDescanso = document.getElementById("pantalla-descanso");
     const temporizadorDescanso = document.getElementById("temporizador-descanso");
     const botonDescanso = document.getElementById("botonDescanso");
@@ -71,8 +73,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const botonReiniciarDescanso = document.getElementById("botonReiniciarDescanso");
     const botonAjustesDescanso = document.getElementById("botonAjustesDescanso");
     const btnPopTemporizadorDescanso = document.getElementById("btnPopTemporizadorDescanso");
+    
+    // Botón del minijuego
+    const botonJugar = document.getElementById("botonJugar");
 
-    // Notificación Toast
+    // Notificaciones
     const notificacionToast = document.getElementById("notificacionToast");
     const toastIcono = document.getElementById("toastIcono");
     const toastTitulo = document.getElementById("toastTitulo");
@@ -80,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const toastCerrar = document.getElementById("toastCerrar");
 
     // =========================================
-    // SISTEMA DE AUDIO (WEB AUDIO API)
+    // SISTEMA DE AUDIO Y TOAST
     // =========================================
     function reproducirCampanada() {
         try {
@@ -93,87 +98,110 @@ document.addEventListener("DOMContentLoaded", () => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 const start = ctx.currentTime + idx * 0.12;
-
                 osc.type = "sine";
                 osc.frequency.setValueAtTime(freq, start);
-
                 gain.gain.setValueAtTime(0.001, start);
                 gain.gain.exponentialRampToValueAtTime(0.18, start + 0.02);
                 gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.7);
-
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-
                 osc.start(start);
                 osc.stop(start + 0.75);
             });
         } catch (e) {}
     }
 
-    // =========================================
-    // NOTIFICACIÓN TOAST
-    // =========================================
     let timeoutToast = null;
     let timeoutOcultar = null;
 
     function mostrarNotificacion(icono, titulo, mensaje) {
         reproducirCampanada();
-
         toastIcono.textContent = icono;
         toastTitulo.textContent = titulo;
         toastMensaje.textContent = mensaje;
 
         clearTimeout(timeoutToast);
         clearTimeout(timeoutOcultar);
-
         notificacionToast.classList.remove("oculta");
         void notificacionToast.offsetWidth;
         notificacionToast.classList.add("visible");
 
-        timeoutToast = setTimeout(() => {
-            cerrarNotificacion();
-        }, 4500);
+        timeoutToast = setTimeout(cerrarNotificacion, 4500);
     }
 
     function cerrarNotificacion() {
         clearTimeout(timeoutToast);
         notificacionToast.classList.remove("visible");
-        timeoutOcultar = setTimeout(() => {
-            notificacionToast.classList.add("oculta");
-        }, 350);
+        timeoutOcultar = setTimeout(() => { notificacionToast.classList.add("oculta"); }, 350);
     }
 
     if (toastCerrar) toastCerrar.addEventListener("click", cerrarNotificacion);
 
     // =========================================
-    // GESTIÓN DE AUTENTICACIÓN
+    // LÓGICA DE BLOQUEO DE APLICACIONES (LISTA NEGRA)
+    // =========================================
+    let intervaloBloqueo = null;
+    
+    if (inputAppsBloqueadas) {
+        inputAppsBloqueadas.value = localStorage.getItem("focus_apps_bloqueadas") || "";
+        inputAppsBloqueadas.addEventListener("change", (e) => {
+            localStorage.setItem("focus_apps_bloqueadas", e.target.value);
+        });
+    }
+
+    function iniciarBloqueoApps() {
+        if (!exec || process.platform !== "win32") {
+            console.log("El bloqueo de apps solo funciona en Windows o 'exec' no cargó.");
+            return;
+        }
+        
+        const appsGuardadas = localStorage.getItem("focus_apps_bloqueadas");
+        if (!appsGuardadas) return;
+
+        const listaApps = appsGuardadas.split(",")
+            .map(app => app.trim())
+            .filter(app => app.length > 0)
+            .map(app => app.toLowerCase().endsWith(".exe") ? app : app + ".exe");
+
+        if (listaApps.length === 0) return;
+
+        if (intervaloBloqueo) clearInterval(intervaloBloqueo);
+
+        console.log("Iniciando centinela de bloqueo para:", listaApps);
+
+        intervaloBloqueo = setInterval(() => {
+            listaApps.forEach(app => {
+                const comando = `taskkill /IM "${app}" /F /T`;
+                exec(comando, (error) => {
+                    if (error && error.code !== 128) {
+                        console.warn(`No se pudo cerrar ${app}. Motivo:`, error.message);
+                    }
+                });
+            });
+        }, 5000);
+    }
+
+    function detenerBloqueoApps() {
+        if (intervaloBloqueo) {
+            clearInterval(intervaloBloqueo);
+            intervaloBloqueo = null;
+        }
+    }
+
+    // =========================================
+    // AUTENTICACIÓN Y SESIONES
     // =========================================
     function obtenerUsuariosRegistrados() {
-        try {
-            const datos = localStorage.getItem("focus_usuarios");
-            const parsed = datos ? JSON.parse(datos) : [];
-            return Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-            return [];
-        }
+        try { const d = localStorage.getItem("focus_usuarios"); return d ? JSON.parse(d) : []; } catch(e) { return []; }
     }
-
-    function guardarUsuariosRegistrados(usuarios) {
-        localStorage.setItem("focus_usuarios", JSON.stringify(usuarios));
-    }
-
+    function guardarUsuariosRegistrados(u) { localStorage.setItem("focus_usuarios", JSON.stringify(u)); }
     function obtenerUsuarioActivo() {
-        try {
-            const datos = localStorage.getItem("focus_usuario_activo");
-            return datos ? JSON.parse(datos) : null;
-        } catch (e) {
-            return null;
-        }
+        try { const d = localStorage.getItem("focus_usuario_activo"); return d ? JSON.parse(d) : null; } catch(e) { return null; }
     }
 
-    function iniciarSesionConUsuario(usuario) {
-        localStorage.setItem("focus_usuario_activo", JSON.stringify(usuario));
-        nombreUsuarioActivo.textContent = usuario.nombre || "Entrenador";
+    function iniciarSesionConUsuario(u) {
+        localStorage.setItem("focus_usuario_activo", JSON.stringify(u));
+        nombreUsuarioActivo.textContent = u.nombre || "Entrenador";
         barraSuperior.classList.remove("oculta");
         cambiarModo("principal", false);
     }
@@ -183,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clearInterval(intervalo);
         intervalo = null;
         funcionando = false;
+        detenerBloqueoApps();
         barraSuperior.classList.add("oculta");
         cambiarModo("auth", false);
         mostrarNotificacion("👋", "Sesión cerrada", "Has vuelto a la pantalla de inicio.");
@@ -195,110 +224,56 @@ document.addEventListener("DOMContentLoaded", () => {
         if (exitoRegister) { exitoRegister.textContent = ""; exitoRegister.classList.add("oculta"); }
     }
 
-    // Pestañas Login / Registro
     if (tabLogin && tabRegister) {
         tabLogin.addEventListener("click", () => {
-            tabLogin.classList.add("activo");
-            tabRegister.classList.remove("activo");
-            formLogin.classList.remove("oculta");
-            formRegister.classList.add("oculta");
-            limpiarMensajesAuth();
+            tabLogin.classList.add("activo"); tabRegister.classList.remove("activo");
+            formLogin.classList.remove("oculta"); formRegister.classList.add("oculta"); limpiarMensajesAuth();
         });
-
         tabRegister.addEventListener("click", () => {
-            tabRegister.classList.add("activo");
-            tabLogin.classList.remove("activo");
-            formRegister.classList.remove("oculta");
-            formLogin.classList.add("oculta");
-            limpiarMensajesAuth();
+            tabRegister.classList.add("activo"); tabLogin.classList.remove("activo");
+            formRegister.classList.remove("oculta"); formLogin.classList.add("oculta"); limpiarMensajesAuth();
         });
     }
 
-    // Submit Iniciar Sesión
     if (formLogin) {
         formLogin.addEventListener("submit", (e) => {
-            e.preventDefault();
-            limpiarMensajesAuth();
-
+            e.preventDefault(); limpiarMensajesAuth();
             const ident = loginUsuario.value.trim().toLowerCase();
             const pass = loginPassword.value;
+            if (!ident || !pass) { errorLogin.textContent = "Por favor, completa todos los campos."; errorLogin.classList.remove("oculta"); return; }
+            
+            const usuarioEncontrado = obtenerUsuariosRegistrados().find(u => (u.usuario?.toLowerCase() === ident) || (u.email?.toLowerCase() === ident));
+            if (!usuarioEncontrado) { errorLogin.textContent = "El usuario o correo no está registrado."; errorLogin.classList.remove("oculta"); return; }
+            if (usuarioEncontrado.password !== pass) { errorLogin.textContent = "Contraseña incorrecta."; errorLogin.classList.remove("oculta"); return; }
 
-            if (!ident || !pass) {
-                errorLogin.textContent = "Por favor, completa todos los campos.";
-                errorLogin.classList.remove("oculta");
-                return;
-            }
-
-            const usuarios = obtenerUsuariosRegistrados();
-            const usuarioEncontrado = usuarios.find(
-                (u) => (u.usuario && u.usuario.toLowerCase() === ident) ||
-                       (u.email && u.email.toLowerCase() === ident)
-            );
-
-            if (!usuarioEncontrado) {
-                errorLogin.textContent = "El usuario o correo no está registrado.";
-                errorLogin.classList.remove("oculta");
-                return;
-            }
-
-            if (usuarioEncontrado.password !== pass) {
-                errorLogin.textContent = "Contraseña incorrecta.";
-                errorLogin.classList.remove("oculta");
-                return;
-            }
-
-            formLogin.reset();
-            limpiarMensajesAuth();
-            iniciarSesionConUsuario(usuarioEncontrado);
+            formLogin.reset(); limpiarMensajesAuth(); iniciarSesionConUsuario(usuarioEncontrado);
             mostrarNotificacion("✨", `¡Hola de nuevo, ${usuarioEncontrado.nombre}!`, "Listo para concentrarte hoy.");
         });
     }
 
-    // Submit Registro
     if (formRegister) {
         formRegister.addEventListener("submit", (e) => {
-            e.preventDefault();
-            limpiarMensajesAuth();
-
-            const nombre = regNombre.value.trim();
-            const email = regEmail.value.trim().toLowerCase();
-            const pass = regPassword.value;
-
-            if (!nombre || !email.includes("@") || pass.length < 4) {
-                errorRegister.textContent = "Ingresa datos válidos (contraseña mínimo 4 caracteres).";
-                errorRegister.classList.remove("oculta");
-                return;
-            }
-
+            e.preventDefault(); limpiarMensajesAuth();
+            const nombre = regNombre.value.trim(); const email = regEmail.value.trim().toLowerCase(); const pass = regPassword.value;
+            if (!nombre || !email.includes("@") || pass.length < 4) { errorRegister.textContent = "Ingresa datos válidos (contraseña mínimo 4 caracteres)."; errorRegister.classList.remove("oculta"); return; }
+            
             const usuarios = obtenerUsuariosRegistrados();
             if (usuarios.some((u) => u.usuario?.toLowerCase() === nombre.toLowerCase() || u.email?.toLowerCase() === email)) {
-                errorRegister.textContent = "El usuario o correo ya está registrado.";
-                errorRegister.classList.remove("oculta");
-                return;
+                errorRegister.textContent = "El usuario o correo ya está registrado."; errorRegister.classList.remove("oculta"); return;
             }
 
             const nuevoUsuario = { usuario: nombre, nombre: nombre, email: email, password: pass, fechaRegistro: new Date().toISOString() };
-            usuarios.push(nuevoUsuario);
-            guardarUsuariosRegistrados(usuarios);
-
-            formRegister.reset();
-            limpiarMensajesAuth();
-            iniciarSesionConUsuario(nuevoUsuario);
+            usuarios.push(nuevoUsuario); guardarUsuariosRegistrados(usuarios);
+            formRegister.reset(); limpiarMensajesAuth(); iniciarSesionConUsuario(nuevoUsuario);
             mostrarNotificacion("🎉", "¡Cuenta creada!", `Bienvenido, Entrenador ${nombre}.`);
         });
     }
 
-    if (btnInvitado) {
-        btnInvitado.addEventListener("click", () => {
-            iniciarSesionConUsuario({ nombre: "Invitado", usuario: "invitado", esInvitado: true });
-            mostrarNotificacion("🍃", "Modo Invitado", "Has ingresado sin cuenta.");
-        });
-    }
-
+    if (btnInvitado) btnInvitado.addEventListener("click", () => { iniciarSesionConUsuario({ nombre: "Invitado", usuario: "invitado", esInvitado: true }); mostrarNotificacion("🍃", "Modo Invitado", "Has ingresado sin cuenta."); });
     if (btnCerrarSesion) btnCerrarSesion.addEventListener("click", cerrarSesion);
 
     // =========================================
-    // PERSONALIZADOR DE TIEMPOS Y MODO POP
+    // TEMPORIZADOR Y MODOS
     // =========================================
     const ICONO_PLAY = `<svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
     const ICONO_PAUSA = `<svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
@@ -313,19 +288,16 @@ document.addEventListener("DOMContentLoaded", () => {
     let minutosDescansoConfig = 10;
     let tiempoEstudio = minutosEstudioConfig * 60;
     let tiempoDescanso = minutosDescansoConfig * 60;
-
     let modoActual = "auth";
     let segundosRestantes = tiempoEstudio;
     let intervalo = null;
     let funcionando = false;
 
-    // Selector del comportamiento de la ventana emergente
     let modoPopTemporizador = localStorage.getItem("focus_modo_pop") || "inicio";
 
     if (selectModoPop) {
         selectModoPop.value = modoPopTemporizador;
         if (ipcRenderer) ipcRenderer.send("actualizar-modo-pop", modoPopTemporizador);
-
         selectModoPop.addEventListener("change", (e) => {
             modoPopTemporizador = e.target.value;
             localStorage.setItem("focus_modo_pop", modoPopTemporizador);
@@ -334,199 +306,96 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function evaluarAbrirPop() {
-        if (!ipcRenderer) return;
-        if (modoPopTemporizador === "inicio") {
-            ipcRenderer.send("abrir-pop-temporizador");
-        }
+        if (ipcRenderer && modoPopTemporizador === "inicio") ipcRenderer.send("abrir-pop-temporizador");
     }
 
-    // Función para abrir/cerrar manualmente al hacer clic en el botón
-    const toggleManualPop = () => {
-        if (ipcRenderer) ipcRenderer.send("toggle-pop-temporizador");
-    };
-
+    const toggleManualPop = () => { if (ipcRenderer) ipcRenderer.send("toggle-pop-temporizador"); };
     if (btnPopTemporizador) btnPopTemporizador.addEventListener("click", toggleManualPop);
     if (btnPopTemporizadorDescanso) btnPopTemporizadorDescanso.addEventListener("click", toggleManualPop);
 
     function actualizarConfiguracionTiempos() {
         if (displayMinutosEstudio) displayMinutosEstudio.textContent = minutosEstudioConfig;
         if (displayMinutosDescanso) displayMinutosDescanso.textContent = minutosDescansoConfig;
-
         tiempoEstudio = minutosEstudioConfig * 60;
         tiempoDescanso = minutosDescansoConfig * 60;
-
-        if (modoActual === "estudio" && !funcionando) {
-            segundosRestantes = tiempoEstudio;
-            actualizarTemporizador();
-        } else if (modoActual === "descanso" && !funcionando) {
-            segundosRestantes = tiempoDescanso;
-            actualizarTemporizador();
-        }
+        if (modoActual === "estudio" && !funcionando) { segundosRestantes = tiempoEstudio; actualizarTemporizador(); }
+        else if (modoActual === "descanso" && !funcionando) { segundosRestantes = tiempoDescanso; actualizarTemporizador(); }
     }
 
     function actualizarTemporizador() {
-        const minutos = Math.floor(segundosRestantes / 60);
-        const segundos = segundosRestantes % 60;
-        const texto = `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
-
-        if (modoActual === "estudio" && temporizador) {
-            temporizador.textContent = texto;
-        } else if (modoActual === "descanso" && temporizadorDescanso) {
-            temporizadorDescanso.textContent = texto;
-        }
-
-        if (ipcRenderer) {
-            ipcRenderer.send("actualizar-tiempo", texto);
-        }
+        const min = Math.floor(segundosRestantes / 60); const seg = segundosRestantes % 60;
+        const texto = `${String(min).padStart(2, "0")}:${String(seg).padStart(2, "0")}`;
+        if (modoActual === "estudio" && temporizador) temporizador.textContent = texto;
+        else if (modoActual === "descanso" && temporizadorDescanso) temporizadorDescanso.textContent = texto;
+        if (ipcRenderer) ipcRenderer.send("actualizar-tiempo", texto);
     }
 
     function contarTiempo() {
-        segundosRestantes--;
-        actualizarTemporizador();
-
+        segundosRestantes--; actualizarTemporizador();
         if (segundosRestantes <= 0) {
-            clearInterval(intervalo);
-            intervalo = null;
-            funcionando = false;
-
-            if (modoActual === "estudio") {
-                mostrarNotificacion("☕", "¡Sesión de estudio cumplida!", "Excelente trabajo. Toca relajarse con Snorlax.");
-                cambiarModo("descanso", true);
-            } else {
-                mostrarNotificacion("📚", "¡Descanso finalizado!", "Energías renovadas. Comenzando nuevo bloque de estudio.");
-                cambiarModo("estudio", false);
-            }
+            clearInterval(intervalo); intervalo = null; funcionando = false; detenerBloqueoApps();
+            if (modoActual === "estudio") { mostrarNotificacion("☕", "¡Sesión de estudio cumplida!", "Excelente trabajo. Toca relajarse con Snorlax."); cambiarModo("descanso", true); }
+            else { mostrarNotificacion("📚", "¡Descanso finalizado!", "Energías renovadas. Comenzando nuevo bloque de estudio."); cambiarModo("estudio", false); }
         }
     }
 
     function reiniciarTemporizador() {
-        clearInterval(intervalo);
-        intervalo = null;
-        funcionando = false;
-
-        if (modoActual === "estudio") {
-            segundosRestantes = tiempoEstudio;
-            fijarBotonPrincipal(botonInicio, "play", "Empezar estudio");
-        } else if (modoActual === "descanso") {
-            segundosRestantes = tiempoDescanso;
-            fijarBotonPrincipal(botonDescanso, "play", "Empezar descanso");
-        }
-
-        actualizarTemporizador();
-        mostrarNotificacion("↺", "Contador reiniciado", "El tiempo ha vuelto al inicio.");
+        clearInterval(intervalo); intervalo = null; funcionando = false; detenerBloqueoApps();
+        if (modoActual === "estudio") { segundosRestantes = tiempoEstudio; fijarBotonPrincipal(botonInicio, "play", "Empezar estudio"); }
+        else if (modoActual === "descanso") { segundosRestantes = tiempoDescanso; fijarBotonPrincipal(botonDescanso, "play", "Empezar descanso"); }
+        actualizarTemporizador(); mostrarNotificacion("↺", "Contador reiniciado", "El tiempo ha vuelto al inicio.");
     }
 
     function controlarTemporizador() {
         const botonActivo = modoActual === "estudio" ? botonInicio : botonDescanso;
-
         if (funcionando) {
-            clearInterval(intervalo);
-            intervalo = null;
-            funcionando = false;
-            fijarBotonPrincipal(botonActivo, "play", "Reanudar");
-
-            if (ipcRenderer) {
-                ipcRenderer.send("estado-temporizador", false);
-                if (modoPopTemporizador === "inicio") {
-                    ipcRenderer.send("cerrar-pop-temporizador");
-                }
-            }
+            clearInterval(intervalo); intervalo = null; funcionando = false;
+            fijarBotonPrincipal(botonActivo, "play", "Reanudar"); detenerBloqueoApps();
+            if (ipcRenderer) { ipcRenderer.send("estado-temporizador", false); if (modoPopTemporizador === "inicio") ipcRenderer.send("cerrar-pop-temporizador"); }
         } else {
-            funcionando = true;
-            intervalo = setInterval(contarTiempo, 1000);
+            funcionando = true; intervalo = setInterval(contarTiempo, 1000);
             fijarBotonPrincipal(botonActivo, "pausa", "Pausar");
-
-            if (ipcRenderer) {
-                ipcRenderer.send("estado-temporizador", true);
-                evaluarAbrirPop();
-            }
+            if (modoActual === "estudio") iniciarBloqueoApps();
+            if (ipcRenderer) { ipcRenderer.send("estado-temporizador", true); evaluarAbrirPop(); }
         }
     }
 
     function cambiarModo(nuevoModo, autoIniciar = false) {
-        clearInterval(intervalo);
-        intervalo = null;
-        funcionando = false;
+        clearInterval(intervalo); intervalo = null; funcionando = false; detenerBloqueoApps();
         modoActual = nuevoModo;
-
-        pantallaAuth.classList.add("oculta");
-        pantallaPrincipal.classList.add("oculta");
-        pantallaEstudio.classList.add("oculta");
-        pantallaDescanso.classList.add("oculta");
+        pantallaAuth.classList.add("oculta"); pantallaPrincipal.classList.add("oculta"); pantallaEstudio.classList.add("oculta"); pantallaDescanso.classList.add("oculta");
 
         if ((modoActual === "auth" || modoActual === "principal") && ipcRenderer) {
-            ipcRenderer.send("cerrar-pop-temporizador");
-            ipcRenderer.send("estado-temporizador", false);
+            ipcRenderer.send("cerrar-pop-temporizador"); ipcRenderer.send("estado-temporizador", false);
         }
 
         if (modoActual === "auth") {
-            pantallaAuth.classList.remove("oculta");
-            barraSuperior.classList.add("oculta");
-            document.body.className = "tema-auth";
-            document.title = "FOCUS - INICIAR SESIÓN";
-            limpiarMensajesAuth();
+            pantallaAuth.classList.remove("oculta"); barraSuperior.classList.add("oculta"); document.body.className = "tema-auth"; document.title = "FOCUS - INICIAR SESIÓN"; limpiarMensajesAuth();
         } else if (modoActual === "principal") {
-            pantallaPrincipal.classList.remove("oculta");
-            barraSuperior.classList.remove("oculta");
-            document.body.className = "tema-bulbasaur";
-            document.title = "FOCUS - PANEL PRINCIPAL";
+            pantallaPrincipal.classList.remove("oculta"); barraSuperior.classList.remove("oculta"); document.body.className = "tema-bulbasaur"; document.title = "FOCUS - PANEL PRINCIPAL";
         } else if (modoActual === "descanso") {
-            pantallaDescanso.classList.remove("oculta");
-            barraSuperior.classList.remove("oculta");
-            document.body.className = "tema-descanso";
-            document.title = "FOCUS - MODO DESCANSO";
-
-            segundosRestantes = tiempoDescanso;
-            actualizarTemporizador();
-
+            pantallaDescanso.classList.remove("oculta"); barraSuperior.classList.remove("oculta"); document.body.className = "tema-descanso"; document.title = "FOCUS - MODO DESCANSO";
+            segundosRestantes = tiempoDescanso; actualizarTemporizador();
             if (autoIniciar) {
-                funcionando = true;
-                intervalo = setInterval(contarTiempo, 1000);
-                fijarBotonPrincipal(botonDescanso, "pausa", "Pausar");
-                if (ipcRenderer) {
-                    ipcRenderer.send("estado-temporizador", true);
-                    evaluarAbrirPop();
-                }
-            } else {
-                fijarBotonPrincipal(botonDescanso, "play", "Empezar descanso");
-            }
+                funcionando = true; intervalo = setInterval(contarTiempo, 1000); fijarBotonPrincipal(botonDescanso, "pausa", "Pausar");
+                if (ipcRenderer) { ipcRenderer.send("estado-temporizador", true); evaluarAbrirPop(); }
+            } else fijarBotonPrincipal(botonDescanso, "play", "Empezar descanso");
         } else {
-            pantallaEstudio.classList.remove("oculta");
-            barraSuperior.classList.remove("oculta");
-            document.body.className = "tema-estudio";
-            document.title = "FOCUS - MODO ESTUDIO";
-
-            segundosRestantes = tiempoEstudio;
-            actualizarTemporizador();
-
+            pantallaEstudio.classList.remove("oculta"); barraSuperior.classList.remove("oculta"); document.body.className = "tema-estudio"; document.title = "FOCUS - MODO ESTUDIO";
+            segundosRestantes = tiempoEstudio; actualizarTemporizador();
             if (autoIniciar) {
-                funcionando = true;
-                intervalo = setInterval(contarTiempo, 1000);
-                fijarBotonPrincipal(botonInicio, "pausa", "Pausar");
-                if (ipcRenderer) {
-                    ipcRenderer.send("estado-temporizador", true);
-                    evaluarAbrirPop();
-                }
-            } else {
-                fijarBotonPrincipal(botonInicio, "play", "Empezar estudio");
-            }
+                funcionando = true; intervalo = setInterval(contarTiempo, 1000); fijarBotonPrincipal(botonInicio, "pausa", "Pausar");
+                if (ipcRenderer) { ipcRenderer.send("estado-temporizador", true); evaluarAbrirPop(); }
+                iniciarBloqueoApps();
+            } else fijarBotonPrincipal(botonInicio, "play", "Empezar estudio");
         }
     }
 
-    // =========================================
-    // REGISTRO DE EVENTOS Y CONTROLES
-    // =========================================
-    if (btnMenosEstudio) btnMenosEstudio.addEventListener("click", () => { if (minutosEstudioConfig > 1) { minutosEstudioConfig--; actualizarConfiguracionTiempos(); } });
-    if (btnMasEstudio) btnMasEstudio.addEventListener("click", () => { if (minutosEstudioConfig < 180) { minutosEstudioConfig++; actualizarConfiguracionTiempos(); } });
-    if (btnMenosDescanso) btnMenosDescanso.addEventListener("click", () => { if (minutosDescansoConfig > 1) { minutosDescansoConfig--; actualizarConfiguracionTiempos(); } });
-    if (btnMasDescanso) btnMasDescanso.addEventListener("click", () => { if (minutosDescansoConfig < 90) { minutosDescansoConfig++; actualizarConfiguracionTiempos(); } });
-
-    function aplicarPreset(estudio, descanso) {
-        minutosEstudioConfig = estudio;
-        minutosDescansoConfig = descanso;
-        actualizarConfiguracionTiempos();
-    }
-
+    if (btnMenosEstudio) btnMenosEstudio.addEventListener("click", () => { if (minutosEstudioConfig > 1) { minutosEstudioConfig--; actualizarConfiguracionTiempos(); }});
+    if (btnMasEstudio) btnMasEstudio.addEventListener("click", () => { if (minutosEstudioConfig < 180) { minutosEstudioConfig++; actualizarConfiguracionTiempos(); }});
+    if (btnMenosDescanso) btnMenosDescanso.addEventListener("click", () => { if (minutosDescansoConfig > 1) { minutosDescansoConfig--; actualizarConfiguracionTiempos(); }});
+    if (btnMasDescanso) btnMasDescanso.addEventListener("click", () => { if (minutosDescansoConfig < 90) { minutosDescansoConfig++; actualizarConfiguracionTiempos(); }});
+    function aplicarPreset(estudio, descanso) { minutosEstudioConfig = estudio; minutosDescansoConfig = descanso; actualizarConfiguracionTiempos(); }
     if (btnPreset25) btnPreset25.addEventListener("click", () => aplicarPreset(25, 5));
     if (btnPreset50) btnPreset50.addEventListener("click", () => aplicarPreset(50, 10));
     if (btnPreset90) btnPreset90.addEventListener("click", () => aplicarPreset(90, 15));
@@ -543,7 +412,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (botonAjustesEstudio) botonAjustesEstudio.addEventListener("click", () => cambiarModo("principal", false));
     if (botonAjustesDescanso) botonAjustesDescanso.addEventListener("click", () => cambiarModo("principal", false));
 
-    // Inicialización de la app
+    // =========================================
+    // ABRIR SALA DE JUEGOS EN NUEVA VENTANA
+    // =========================================
+    if (botonJugar) {
+        botonJugar.addEventListener("click", () => {
+            if (ipcRenderer) {
+                ipcRenderer.send("abrir-ventana-juegos");
+            }
+        });
+    }
+
+    // =========================================
+    // INICIALIZACIÓN DE LA APP (SIEMPRE AL FINAL)
+    // =========================================
     actualizarConfiguracionTiempos();
     const usuarioActivoGuardado = obtenerUsuarioActivo();
     if (usuarioActivoGuardado) {

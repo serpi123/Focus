@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -181,7 +181,21 @@
 
             <div class="divisor-personalizador"></div>
 
-            <!-- Fila 4: Accesos rápidos -->
+            <!-- Fila 4: Bloqueo de Aplicaciones -->
+            <div class="control-tiempo" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <span class="etiqueta-tiempo">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    Bloquear distracciones (Lista Negra)
+                </span>
+                <input type="text" id="inputAppsBloqueadas" class="select-personalizador" style="width: 100%; max-width: 100%; cursor: text;" placeholder="ej: chrome.exe, discord.exe, steam.exe">
+            </div>
+
+            <div class="divisor-personalizador"></div>
+
+            <!-- Fila 5: Accesos rápidos -->
             <div class="fila-presets">
                 <button id="btnPreset25" class="btn-preset" type="button">25 / 5 min</button>
                 <button id="btnPreset50" class="btn-preset" type="button">50 / 10 min</button>
@@ -275,6 +289,7 @@
             <img src="assets/Pixel Eat Sticker.gif" alt="Snorlax, el pokemon de modo descanso" class="imagen-pokemon">
         </div>
 
+        
         <div class="contenedor-acciones">
             <button id="botonDescanso" class="boton-principal" type="button">
                 <svg class="icono-btn" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -302,6 +317,13 @@
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                     </svg>
                     <span>Ajustes</span>
+                </button>
+                <button id="botonJugar" class="boton-secundario" type="button">
+                    <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M8 12l2 2 4-4"></path>
+                    </svg>
+                    <span>Minijuego</span>
                 </button>
                 <button id="btnPopTemporizadorDescanso" class="boton-secundario" type="button">
                     <svg class="icono-btn" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
