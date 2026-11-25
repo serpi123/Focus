@@ -28,7 +28,8 @@ No hace falta instalar Node.js ni nada más: el instalador trae todo lo necesari
    **Ejecutar de todas formas**. Este aviso aparece porque el instalador no tiene una firma digital
    paga; no significa que tenga un virus.
 4. **Elige dónde instalarlo.** La carpeta que propone el instalador está bien para la mayoría de
-   las personas. Pulsa **Instalar**.
+   las personas. Si eliges otra, que sea una carpeta **vacía** o nueva, no una carpeta con tus
+   documentos. Pulsa **Instalar**.
 5. Al terminar, deja marcada la opción **Ejecutar FOCUS** y pulsa **Terminar**.
 
 Se crean dos accesos directos llamados **FOCUS**: uno en el escritorio y otro en el menú Inicio.
@@ -93,6 +94,11 @@ npm start
 `npm install` descarga Electron y electron-builder en `node_modules/`. Esa carpeta no se sube a
 GitHub, así que cada persona del equipo tiene que ejecutar `npm install` una vez.
 
+> ⚠️ **Nunca instales FOCUS dentro de la carpeta del repositorio.** Si pruebas el instalador, deja
+> la carpeta que propone por defecto. Las versiones del instalador anteriores a la desinstalación
+> segura (ver `build/installer.nsh`) borraban la carpeta de instalación completa al desinstalar o
+> actualizar.
+
 ### Comandos
 
 | Comando | Qué hace |
@@ -101,6 +107,7 @@ GitHub, así que cada persona del equipo tiene que ejecutar `npm install` una ve
 | `npm run dist` | Genera el instalador `dist/FOCUS-Setup-<versión>.exe`. |
 | `npm run pack` | Genera la app sin instalador en `dist/win-unpacked/` (sirve para probar rápido). |
 | `npm run temas` | Regenera `temas-pokemon.css`. Hay que ejecutarlo después de cambiar colores en `styles.css`. |
+| `npm run word` | Regenera `docs/INSTALACION.docx` y `docs/MANUAL_DE_USUARIO.docx` a partir de los `.md`. |
 
 ### Publicar una versión nueva
 
@@ -125,5 +132,7 @@ La carpeta `dist/` está en `.gitignore`: el instalador se publica en Releases, 
 | `doom/` | Freedoom: motor, datos y licencias (ver [doom/README.md](../doom/README.md)). |
 | `assets/` | GIFs de los Pokémon. |
 | `build/icon.png` | Ícono de la app y del instalador. |
+| `build/installer.nsh` | Desinstalación segura: borra solo los archivos de FOCUS. |
 | `scripts/generar-temas.js` | Generador de paletas. |
+| `scripts/generar-word.js` | Genera los Word de la carpeta `docs/` a partir de los `.md`. |
 | `docs/` | Manual de usuario y esta guía. |

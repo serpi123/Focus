@@ -87,6 +87,9 @@ mejoras de seguridad, nuevas funciones del método Pomodoro, temas, Freedoom y u
 - **Freedoom se sirve con un protocolo propio** (`focus-doom://`) que solo puede leer la carpeta
   `doom/`.
 - **Los enlaces externos** se abren en el navegador, no dentro de la app.
+- **Desinstalación segura:** el desinstalador borra solo los archivos de FOCUS. El de electron-builder
+  borraba la carpeta de instalación completa, así que instalar FOCUS en una carpeta con otros
+  archivos (por ejemplo, una llamada "focus") y después desinstalarlo o actualizarlo borraba todo.
 
 ### Cambiado
 
