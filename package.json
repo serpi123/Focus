@@ -1,16 +1,75 @@
 {
   "name": "focus",
   "version": "1.0.0",
-  "description": "Aplicacion de temporizador para estudiar",
+  "description": "Temporizador Pomodoro para estudiar, con bloqueador de aplicaciones",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "temas": "node scripts/generar-temas.js",
+    "dist": "electron-builder --win nsis",
+    "pack": "electron-builder --win dir",
+    "word": "node scripts/generar-word.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "serpi123",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "electron": "^45.0.0"
+    "docx": "^9.16.0",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0"
+  },
+  "productName": "FOCUS",
+  "build": {
+    "appId": "com.focus.pomodoro",
+    "productName": "FOCUS",
+    "copyright": "Copyright © 2026 serpi123",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "script.js",
+      "styles.css",
+      "temas-pokemon.css",
+      "temporizador.html",
+      "temporizador.js",
+      "juegos.html",
+      "juegos.js",
+      "assets/**",
+      "doom/**",
+      "build/icon.png",
+      "package.json"
+    ],
+    "asarUnpack": [],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FOCUS",
+      "uninstallDisplayName": "FOCUS",
+      "artifactName": "FOCUS-Setup-${version}.${ext}",
+      "installerLanguages": [
+        "es_ES"
+      ],
+      "language": "3082",
+      "runAfterFinish": true
+    }
   }
 }

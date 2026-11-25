@@ -1,15 +1,17 @@
 // =========================================
-// INTEGRACIÓN CON ELECTRON (IPC Y PROCESOS)
+// INTEGRACIÓN CON ELECTRON (vía preload.js)
 // =========================================
-let ipcRenderer = null;
-let exec = null;
-try {
-    const electron = require("electron");
-    ipcRenderer = electron.ipcRenderer;
-    exec = require("child_process").exec;
-} catch (e) {
-    console.warn("Ejecutando fuera del entorno de Electron.");
+// La interfaz no tiene acceso a Node: todo pasa por window.focusAPI (ver preload.js)
+const api = window.focusAPI || null;
+if (!api) console.warn("Ejecutando fuera del entorno de Electron.");
+
+function enviarIPC(canal, datos) {
+    if (api) api.send(canal, datos);
 }
+
+// Nombre de ejecutable válido: letras, números, espacios, . _ - ( ) + y terminado en .exe
+const EXE_VALIDO = /^[\w .()+\-]{1,100}\.exe$/i;
+const ICONO_DATAURL_VALIDO = /^data:image\/(png|jpeg|gif|webp|bmp|x-icon);base64,[A-Za-z0-9+/=]+$/;
 
 document.addEventListener("DOMContentLoaded", () => {
     // =========================================
@@ -45,6 +47,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnMenosDescanso = document.getElementById("btnMenosDescanso");
     const btnMasDescanso = document.getElementById("btnMasDescanso");
     const displayMinutosDescanso = document.getElementById("displayMinutosDescanso");
+
+    const btnMenosDescansoLargo = document.getElementById("btnMenosDescansoLargo");
+    const btnMasDescansoLargo = document.getElementById("btnMasDescansoLargo");
+    const displayMinutosDescansoLargo = document.getElementById("displayMinutosDescansoLargo");
+
+    const btnMenosCiclos = document.getElementById("btnMenosCiclos");
+    const btnMasCiclos = document.getElementById("btnMasCiclos");
+    const displayCiclos = document.getElementById("displayCiclos");
+
+    const switchAutoEstudio = document.getElementById("switchAutoEstudio");
+
+    const indicadorCicloEstudio = document.getElementById("indicadorCicloEstudio");
+    const indicadorCicloDescanso = document.getElementById("indicadorCicloDescanso");
 
     const selectModoPop = document.getElementById("selectModoPop");
     
@@ -114,13 +129,66 @@ document.addEventListener("DOMContentLoaded", () => {
     const metricaTotal = document.getElementById("metricaTotal");
 
     // =========================================
+    // ALMACENAMIENTO POR USUARIO
+    // =========================================
+    // Cada usuario tiene sus propios objetivos, historial, apps y ajustes.
+    let idUsuarioActual = null;
+
+    function claveUsuario(base) {
+        return `focus_${base}__${idUsuarioActual || "invitado"}`;
+    }
+
+    function leerJSON(clave, porDefecto) {
+        try {
+            const raw = localStorage.getItem(clave);
+            return raw ? JSON.parse(raw) : porDefecto;
+        } catch (e) {
+            return porDefecto;
+        }
+    }
+
+    function leerDatoUsuario(base, porDefecto) {
+        return leerJSON(claveUsuario(base), porDefecto);
+    }
+
+    function guardarDatoUsuario(base, valor) {
+        localStorage.setItem(claveUsuario(base), JSON.stringify(valor));
+    }
+
+    // Las versiones anteriores guardaban todo en claves globales compartidas.
+    // Esos datos se entregan una sola vez al primer usuario que inicia sesión.
+    const CLAVES_ANTIGUAS = {
+        focus_objetivos: "objetivos",
+        focus_historial: "historial",
+        focus_apps_bloqueadas_lista: "apps",
+        focus_master_bloqueo: "bloqueoMaestro"
+    };
+
+    function migrarDatosAntiguos() {
+        Object.entries(CLAVES_ANTIGUAS).forEach(([claveVieja, base]) => {
+            const valor = localStorage.getItem(claveVieja);
+            if (valor === null) return;
+            if (localStorage.getItem(claveUsuario(base)) === null) {
+                if (base === "bloqueoMaestro") guardarDatoUsuario(base, valor !== "false");
+                else localStorage.setItem(claveUsuario(base), valor);
+            }
+            localStorage.removeItem(claveVieja);
+        });
+        localStorage.removeItem("focus_apps_bloqueadas");
+    }
+
+    // =========================================
     // SISTEMA DE AUDIO Y TOAST
     // =========================================
+    let contextoAudio = null; // se reutiliza: crear uno por aviso agota los recursos de audio
+
     function reproducirCampanada() {
         try {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             if (!AudioCtx) return;
-            const ctx = new AudioCtx();
+            if (!contextoAudio) contextoAudio = new AudioCtx();
+            const ctx = contextoAudio;
+            if (ctx.state === "suspended") ctx.resume();
             const notas = [523.25, 659.25];
 
             notas.forEach((freq, idx) => {
@@ -143,8 +211,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let timeoutToast = null;
     let timeoutOcultar = null;
 
-    function mostrarNotificacion(icono, titulo, mensaje) {
+    // avisoSistema = true también muestra una notificación de Windows si la app no está enfocada
+    function mostrarNotificacion(icono, titulo, mensaje, avisoSistema = false) {
         reproducirCampanada();
+        if (avisoSistema) enviarIPC("notificar", { titulo: `${icono} ${titulo}`, cuerpo: mensaje });
         toastIcono.textContent = icono;
         toastTitulo.textContent = titulo;
         toastMensaje.textContent = mensaje;
@@ -215,15 +285,14 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
 
     let appsBloqueadas = [];
-    let masterBloqueoActivo = localStorage.getItem("focus_master_bloqueo") !== "false";
-    let intervaloBloqueo = null;
+    let masterBloqueoActivo = true;
+    let bloqueoEnCurso = false;
 
     // Inicializar interruptor maestro
     if (switchMasterBloqueo) {
-        switchMasterBloqueo.checked = masterBloqueoActivo;
         switchMasterBloqueo.addEventListener("change", (e) => {
             masterBloqueoActivo = e.target.checked;
-            localStorage.setItem("focus_master_bloqueo", masterBloqueoActivo ? "true" : "false");
+            guardarDatoUsuario("bloqueoMaestro", masterBloqueoActivo);
             actualizarEstadoBloqueador();
             if (masterBloqueoActivo) {
                 mostrarNotificacion("🛡️", "Bloqueador Activado", "Se cerrarán las apps seleccionadas durante el estudio.");
@@ -235,67 +304,51 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Cargar apps guardadas o migrar del formato antiguo
+    // Normaliza una app guardada: descarta nombres de .exe inválidos e iconos sospechosos
+    function sanearApp(app, idx) {
+        if (!app || typeof app.exe !== "string") return null;
+        const exe = app.exe.trim().toLowerCase().endsWith(".exe") ? app.exe.trim() : app.exe.trim() + ".exe";
+        if (!EXE_VALIDO.test(exe)) return null;
+        const sugerida = APPS_SUGERIDAS.find(s => s.exe.toLowerCase() === exe.toLowerCase());
+        const iconoUrl = (typeof app.iconoUrl === "string" && ICONO_DATAURL_VALIDO.test(app.iconoUrl)) ? app.iconoUrl : null;
+        return {
+            id: typeof app.id === "string" && app.id ? app.id : `app_${Date.now()}_${idx}`,
+            nombre: typeof app.nombre === "string" && app.nombre ? app.nombre : exe.replace(/\.exe$/i, ""),
+            exe,
+            activo: app.activo !== false,
+            iconoKey: sugerida ? sugerida.iconoKey : (ICONOS_APPS_SVG[app.iconoKey] ? app.iconoKey : "generico"),
+            iconoUrl
+        };
+    }
+
     function cargarAppsBloqueadas() {
-        const jsonGuardado = localStorage.getItem("focus_apps_bloqueadas_lista");
-        if (jsonGuardado) {
-            try {
-                appsBloqueadas = JSON.parse(jsonGuardado);
-                // Asegurar respaldo de iconoKey válido y sanear URLs de imagen
-                appsBloqueadas.forEach(app => {
-                    const sugerida = APPS_SUGERIDAS.find(s => 
-                        (app.exe && s.exe.toLowerCase() === app.exe.toLowerCase()) || 
-                        (app.nombre && s.nombre.toLowerCase() === app.nombre.toLowerCase()) ||
-                        (app.id && s.id.toLowerCase() === app.id.toLowerCase())
-                    );
-                    if (sugerida && (!app.iconoKey || app.iconoKey === "generico")) {
-                        app.iconoKey = sugerida.iconoKey;
-                    }
-                    if (app.iconoUrl && (!app.iconoUrl.startsWith("data:image/") || app.iconoUrl.length < 80)) {
-                        app.iconoUrl = null;
-                    }
+        const guardadas = leerDatoUsuario("apps", null);
+        if (Array.isArray(guardadas)) {
+            const vistos = new Set();
+            appsBloqueadas = guardadas
+                .map(sanearApp)
+                .filter(Boolean)
+                .filter(app => {
+                    // Evitar duplicados por id o por ejecutable
+                    const clave = app.exe.toLowerCase();
+                    if (vistos.has(clave) || vistos.has("id:" + app.id)) return false;
+                    vistos.add(clave); vistos.add("id:" + app.id);
+                    return true;
                 });
-            } catch (err) {
-                appsBloqueadas = [];
-            }
         } else {
-            const anterior = localStorage.getItem("focus_apps_bloqueadas");
-            if (anterior && anterior.trim().length > 0) {
-                const nombres = anterior.split(",").map(s => s.trim()).filter(Boolean);
-                appsBloqueadas = nombres.map((nom, idx) => {
-                    const exe = nom.toLowerCase().endsWith(".exe") ? nom : nom + ".exe";
-                    const sugerida = APPS_SUGERIDAS.find(s => s.exe.toLowerCase() === exe.toLowerCase() || s.id === nom.toLowerCase());
-                    return {
-                        id: sugerida ? sugerida.id : "app_" + idx + "_" + Date.now(),
-                        nombre: sugerida ? sugerida.nombre : nom.replace(/\.exe$/i, ""),
-                        exe: sugerida ? sugerida.exe : exe,
-                        activo: true,
-                        iconoKey: sugerida ? sugerida.iconoKey : "generico",
-                        iconoUrl: null
-                    };
-                });
-            } else {
-                // Apps predeterminadas para que se aprecie el diseño desde el inicio
-                appsBloqueadas = [
-                    { id: "discord", nombre: "Discord", exe: "Discord.exe", activo: true, iconoKey: "discord", iconoUrl: null },
-                    { id: "chrome", nombre: "Google Chrome", exe: "chrome.exe", activo: true, iconoKey: "chrome", iconoUrl: null },
-                    { id: "steam", nombre: "Steam", exe: "steam.exe", activo: true, iconoKey: "steam", iconoUrl: null }
-                ];
-            }
-            guardarAppsBloqueadas();
+            // Lista inicial: solo distracciones claras (el navegador suele hacer falta para estudiar)
+            appsBloqueadas = [
+                { id: "discord", nombre: "Discord", exe: "Discord.exe", activo: true, iconoKey: "discord", iconoUrl: null },
+                { id: "steam", nombre: "Steam", exe: "steam.exe", activo: true, iconoKey: "steam", iconoUrl: null }
+            ];
+            guardarDatoUsuario("apps", appsBloqueadas);
         }
+        masterBloqueoActivo = leerDatoUsuario("bloqueoMaestro", true) !== false;
+        if (switchMasterBloqueo) switchMasterBloqueo.checked = masterBloqueoActivo;
     }
 
     function guardarAppsBloqueadas() {
-        localStorage.setItem("focus_apps_bloqueadas_lista", JSON.stringify(appsBloqueadas));
-        
-        // Mantener compatibilidad con string de localStorage
-        const listaActivas = appsBloqueadas
-            .filter(app => app.activo)
-            .map(app => app.exe)
-            .join(", ");
-        localStorage.setItem("focus_apps_bloqueadas", listaActivas);
-
+        guardarDatoUsuario("apps", appsBloqueadas);
         actualizarEstadoBloqueador();
         if (funcionando && modoActual === "estudio") {
             iniciarBloqueoApps();
@@ -305,13 +358,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function actualizarEstadoBloqueador() {
         const totalActivas = appsBloqueadas.filter(a => a.activo).length;
         if (badgeContadorApps) {
-            if (!masterBloqueoActivo) {
-                badgeContadorApps.textContent = "Pausado";
-                badgeContadorApps.style.color = "#718096";
-            } else {
-                badgeContadorApps.textContent = `${totalActivas} activa${totalActivas === 1 ? "" : "s"}`;
-                badgeContadorApps.style.color = "#2d6a4f";
-            }
+            // El color lo pone el CSS (así respeta el tema activo)
+            badgeContadorApps.classList.toggle("pausado", !masterBloqueoActivo);
+            badgeContadorApps.textContent = masterBloqueoActivo
+                ? `${totalActivas} activa${totalActivas === 1 ? "" : "s"}`
+                : "Pausado";
         }
     }
 
@@ -325,9 +376,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const iconoKey = (sugerida && sugerida.iconoKey) || app.iconoKey || "generico";
         const svgFallback = ICONOS_APPS_SVG[iconoKey] || ICONOS_APPS_SVG.generico;
 
-        if (app.iconoUrl && typeof app.iconoUrl === "string" && app.iconoUrl.length > 80 && app.iconoUrl.startsWith("data:image/")) {
+        if (typeof app.iconoUrl === "string" && ICONO_DATAURL_VALIDO.test(app.iconoUrl)) {
+            // El error de carga se maneja con addEventListener en renderizarListaApps (sin JS en línea)
             return `
-                <img src="${app.iconoUrl}" class="icono-app-img" alt="${escapeHtml(app.nombre)}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                <img src="${escapeHtml(app.iconoUrl)}" class="icono-app-img" alt="${escapeHtml(app.nombre)}">
                 <span class="icono-app-fallback" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;">
                     ${svgFallback}
                 </span>
@@ -425,10 +477,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${app.activo ? "Bloqueado" : "Pausado"}
                     </span>
                     <label class="switch-app" title="${app.activo ? "Pausar" : "Activar"}">
-                        <input type="checkbox" class="check-app-toggle" data-id="${app.id}" ${app.activo ? "checked" : ""}>
+                        <input type="checkbox" class="check-app-toggle" data-id="${escapeHtml(app.id)}" ${app.activo ? "checked" : ""}>
                         <span class="slider-app"></span>
                     </label>
-                    <button type="button" class="btn-eliminar-app" data-id="${app.id}" title="Eliminar de la lista">
+                    <button type="button" class="btn-eliminar-app" data-id="${escapeHtml(app.id)}" title="Eliminar de la lista">
                         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -436,6 +488,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     </button>
                 </div>
             `;
+
+            // Si el icono real no carga, mostrar el SVG de respaldo
+            const img = tarjeta.querySelector(".icono-app-img");
+            if (img) {
+                img.addEventListener("error", () => {
+                    img.style.display = "none";
+                    if (img.nextElementSibling) img.nextElementSibling.style.display = "flex";
+                });
+            }
 
             // Control de encendido/apagado por app
             const check = tarjeta.querySelector(".check-app-toggle");
@@ -460,6 +521,41 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Añade (o reactiva) una app a la lista. Devuelve false si el nombre no es válido.
+    function agregarApp({ exe, nombre, iconoKey = "generico", iconoUrl = null }) {
+        exe = String(exe || "").trim();
+        if (!exe.toLowerCase().endsWith(".exe")) exe += ".exe";
+        if (!EXE_VALIDO.test(exe)) {
+            mostrarNotificacion("⚠️", "Nombre no válido", "Usa solo letras, números, espacios, puntos, guiones o paréntesis (ej: valorant.exe).");
+            return false;
+        }
+        const sugerida = APPS_SUGERIDAS.find(s => s.exe.toLowerCase() === exe.toLowerCase());
+        if (sugerida) iconoKey = sugerida.iconoKey;
+        const iconoValido = (typeof iconoUrl === "string" && ICONO_DATAURL_VALIDO.test(iconoUrl)) ? iconoUrl : null;
+        const nombreFinal = sugerida ? sugerida.nombre : (nombre || exe.replace(/\.exe$/i, ""));
+
+        const existente = appsBloqueadas.find(a => a.exe.toLowerCase() === exe.toLowerCase());
+        if (existente) {
+            existente.activo = true;
+            if (iconoValido && !existente.iconoUrl) existente.iconoUrl = iconoValido;
+            mostrarNotificacion("ℹ️", "Ya configurada", `${existente.nombre} ya estaba en tu lista y fue activada.`);
+        } else {
+            appsBloqueadas.unshift({
+                id: "app_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+                nombre: nombreFinal.charAt(0).toUpperCase() + nombreFinal.slice(1),
+                exe,
+                activo: true,
+                iconoKey,
+                iconoUrl: iconoValido
+            });
+            mostrarNotificacion("✨", "Aplicación añadida", `${nombreFinal} añadida a la lista de bloqueo.`);
+        }
+        guardarAppsBloqueadas();
+        renderizarSugerencias();
+        renderizarListaApps();
+        return true;
+    }
+
     // Añadir aplicación desde el campo de texto
     function agregarAppManual() {
         if (!inputNombreAppPersonalizada) return;
@@ -469,7 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const sugerida = APPS_SUGERIDAS.find(s => 
+        const sugerida = APPS_SUGERIDAS.find(s =>
             s.nombre.toLowerCase() === texto.toLowerCase() ||
             s.exe.toLowerCase() === texto.toLowerCase() ||
             s.id.toLowerCase() === texto.toLowerCase()
@@ -477,31 +573,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (sugerida) {
             alternarSugerencia(sugerida);
-        } else {
-            const exeNormalizado = texto.toLowerCase().endsWith(".exe") ? texto : texto + ".exe";
-            const nombreLimpio = texto.replace(/\.exe$/i, "");
-            
-            const existente = appsBloqueadas.find(a => a.exe.toLowerCase() === exeNormalizado.toLowerCase());
-            if (existente) {
-                existente.activo = true;
-                mostrarNotificacion("ℹ️", "Ya configurada", `${existente.nombre} ya estaba en tu lista y fue activada.`);
-            } else {
-                appsBloqueadas.unshift({
-                    id: "app_" + Date.now(),
-                    nombre: nombreLimpio.charAt(0).toUpperCase() + nombreLimpio.slice(1),
-                    exe: exeNormalizado,
-                    activo: true,
-                    iconoKey: "generico",
-                    iconoUrl: null
-                });
-                mostrarNotificacion("✨", "Aplicación añadida", `${nombreLimpio} añadida a la lista de bloqueo.`);
-            }
-            guardarAppsBloqueadas();
-            renderizarSugerencias();
-            renderizarListaApps();
+            inputNombreAppPersonalizada.value = "";
+        } else if (agregarApp({ exe: texto, nombre: texto.replace(/\.exe$/i, "") })) {
+            inputNombreAppPersonalizada.value = "";
         }
-
-        inputNombreAppPersonalizada.value = "";
     }
 
     if (btnAgregarAppManual) btnAgregarAppManual.addEventListener("click", agregarAppManual);
@@ -517,47 +592,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Botón Examinar .exe en el ordenador (con extracción del icono auténtico del sistema)
     if (btnExaminarExe) {
         btnExaminarExe.addEventListener("click", async () => {
-            if (ipcRenderer) {
-                try {
-                    const res = await ipcRenderer.invoke("seleccionar-archivo-exe");
-                    if (res && res.archivo) {
-                        const exe = res.archivo.toLowerCase().endsWith(".exe") ? res.archivo : res.archivo + ".exe";
-                        const sugerida = APPS_SUGERIDAS.find(s => 
-                            s.exe.toLowerCase() === exe.toLowerCase() || 
-                            s.nombre.toLowerCase() === res.nombre.toLowerCase() ||
-                            s.id.toLowerCase() === res.nombre.toLowerCase()
-                        );
-                        const iconoKey = sugerida ? sugerida.iconoKey : "generico";
-                        const nombreFinal = sugerida ? sugerida.nombre : res.nombre;
-                        const iconoUrlValido = (res.icono && typeof res.icono === "string" && res.icono.length > 80) ? res.icono : null;
-
-                        const existente = appsBloqueadas.find(a => a.exe.toLowerCase() === exe.toLowerCase());
-                        if (existente) {
-                            existente.activo = true;
-                            if (iconoUrlValido && !existente.iconoUrl) existente.iconoUrl = iconoUrlValido;
-                            if (iconoKey) existente.iconoKey = iconoKey;
-                            mostrarNotificacion("ℹ️", "App activada", `${existente.nombre} ya existía y fue activada.`);
-                        } else {
-                            appsBloqueadas.unshift({
-                                id: "app_" + Date.now(),
-                                nombre: nombreFinal,
-                                exe: exe,
-                                activo: true,
-                                iconoKey: iconoKey,
-                                iconoUrl: iconoUrlValido
-                            });
-                            mostrarNotificacion("🎉", "¡App e icono listos!", `${nombreFinal} añadida a la lista de bloqueo.`);
-                        }
-                        guardarAppsBloqueadas();
-                        renderizarSugerencias();
-                        renderizarListaApps();
-                    }
-                } catch (err) {
-                    console.warn("Fallo diálogo nativo, recurriendo al selector:", err);
-                    if (inputArchivoExeFallback) inputArchivoExeFallback.click();
+            if (!api) {
+                if (inputArchivoExeFallback) inputArchivoExeFallback.click();
+                return;
+            }
+            try {
+                const res = await api.invoke("seleccionar-archivo-exe");
+                if (res && res.archivo) {
+                    agregarApp({ exe: res.archivo, nombre: res.nombre, iconoUrl: res.icono });
                 }
-            } else if (inputArchivoExeFallback) {
-                inputArchivoExeFallback.click();
+            } catch (err) {
+                console.warn("Fallo diálogo nativo, recurriendo al selector:", err);
+                if (inputArchivoExeFallback) inputArchivoExeFallback.click();
             }
         });
     }
@@ -567,20 +613,7 @@ document.addEventListener("DOMContentLoaded", () => {
         inputArchivoExeFallback.addEventListener("change", (e) => {
             if (e.target.files && e.target.files.length > 0) {
                 const archivo = e.target.files[0].name;
-                const exe = archivo.toLowerCase().endsWith(".exe") ? archivo : archivo + ".exe";
-                const nombre = archivo.replace(/\.exe$/i, "");
-                appsBloqueadas.unshift({
-                    id: "app_" + Date.now(),
-                    nombre: nombre,
-                    exe: exe,
-                    activo: true,
-                    iconoKey: "generico",
-                    iconoUrl: null
-                });
-                guardarAppsBloqueadas();
-                renderizarSugerencias();
-                renderizarListaApps();
-                mostrarNotificacion("✨", "Aplicación añadida", `${nombre} añadida a la lista.`);
+                agregarApp({ exe: archivo, nombre: archivo.replace(/\.exe$/i, "") });
                 inputArchivoExeFallback.value = "";
             }
         });
@@ -609,86 +642,118 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Cargar e iniciar componentes de bloqueo
-    cargarAppsBloqueadas();
-    renderizarSugerencias();
-    renderizarListaApps();
-    actualizarEstadoBloqueador();
-
-    // Centinela de bloqueo de procesos en Windows
+    // =========================================
+    // CENTINELA DE BLOQUEO (se ejecuta en el proceso principal, ver main.js)
+    // =========================================
     function iniciarBloqueoApps() {
-        if (!exec || process.platform !== "win32") {
-            console.log("El bloqueo de apps solo funciona en Windows o 'exec' no cargó.");
+        if (!api || api.plataforma !== "win32") {
+            console.log("El bloqueo de apps solo funciona en Windows dentro de Electron.");
             return;
         }
-
-        const masterActivo = localStorage.getItem("focus_master_bloqueo") !== "false";
-        if (!masterActivo) {
-            console.log("Bloqueo pausado por interruptor maestro.");
+        if (!masterBloqueoActivo) {
             detenerBloqueoApps();
             return;
         }
 
         const listaApps = appsBloqueadas
             .filter(app => app.activo)
-            .map(app => app.exe.toLowerCase().endsWith(".exe") ? app.exe : app.exe + ".exe")
-            .filter(Boolean);
+            .map(app => app.exe)
+            .filter(exe => EXE_VALIDO.test(exe));
 
         if (listaApps.length === 0) {
-            console.log("No hay aplicaciones activas para bloquear.");
             detenerBloqueoApps();
             return;
         }
 
-        if (intervaloBloqueo) clearInterval(intervaloBloqueo);
-
-        console.log("Iniciando centinela de bloqueo para:", listaApps);
-
-        intervaloBloqueo = setInterval(() => {
-            listaApps.forEach(app => {
-                const comando = `taskkill /IM "${app}" /F /T`;
-                exec(comando, (error) => {
-                    if (error && error.code !== 128) {
-                        console.warn(`Aviso centinela (${app}):`, error.message);
-                    }
-                });
-            });
-        }, 5000);
+        enviarIPC("bloqueo-iniciar", listaApps);
+        bloqueoEnCurso = true;
     }
 
     function detenerBloqueoApps() {
-        if (intervaloBloqueo) {
-            clearInterval(intervaloBloqueo);
-            intervaloBloqueo = null;
-        }
+        if (!bloqueoEnCurso) return;
+        enviarIPC("bloqueo-detener");
+        bloqueoEnCurso = false;
+    }
+
+    // Aviso cada vez que el centinela cierra una app
+    if (api) {
+        api.on("app-bloqueada", (exe) => {
+            const app = appsBloqueadas.find(a => a.exe.toLowerCase() === String(exe).toLowerCase());
+            const nombre = app ? app.nombre : exe;
+            mostrarNotificacion("🛡️", "Distracción bloqueada", `${nombre} se cerró. ¡Sigue concentrado!`);
+        });
     }
 
     // =========================================
     // AUTENTICACIÓN Y SESIONES
     // =========================================
     function obtenerUsuariosRegistrados() {
-        try { const d = localStorage.getItem("focus_usuarios"); return d ? JSON.parse(d) : []; } catch(e) { return []; }
+        const lista = leerJSON("focus_usuarios", []);
+        return Array.isArray(lista) ? lista : [];
     }
     function guardarUsuariosRegistrados(u) { localStorage.setItem("focus_usuarios", JSON.stringify(u)); }
-    function obtenerUsuarioActivo() {
-        try { const d = localStorage.getItem("focus_usuario_activo"); return d ? JSON.parse(d) : null; } catch(e) { return null; }
+    function obtenerUsuarioActivo() { return leerJSON("focus_usuario_activo", null); }
+
+    // ---- Contraseñas con hash (PBKDF2 + sal aleatoria). Nunca se guardan en texto plano ----
+    const ITERACIONES_PBKDF2 = 150000;
+
+    function bytesAHex(bytes) {
+        return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+    }
+    function hexABytes(hex) {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+        return bytes;
+    }
+
+    async function calcularHash(password, salHex) {
+        const sal = salHex ? hexABytes(salHex) : crypto.getRandomValues(new Uint8Array(16));
+        const clave = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+        const bits = await crypto.subtle.deriveBits(
+            { name: "PBKDF2", salt: sal, iterations: ITERACIONES_PBKDF2, hash: "SHA-256" },
+            clave,
+            256
+        );
+        return { hash: bytesAHex(new Uint8Array(bits)), sal: bytesAHex(sal) };
+    }
+
+    // Comparación en tiempo constante
+    function hashesIguales(a, b) {
+        if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+        let diferencia = 0;
+        for (let i = 0; i < a.length; i++) diferencia |= a.charCodeAt(i) ^ b.charCodeAt(i);
+        return diferencia === 0;
+    }
+
+    async function verificarPassword(usuario, password) {
+        if (usuario.passwordHash && usuario.sal) {
+            const { hash } = await calcularHash(password, usuario.sal);
+            return hashesIguales(hash, usuario.passwordHash);
+        }
+        // Cuentas creadas con la versión anterior (contraseña en texto plano)
+        return typeof usuario.password === "string" && usuario.password === password;
+    }
+
+    // Solo los datos públicos del usuario se guardan como "sesión activa"
+    function datosPublicos(u) {
+        return { usuario: u.usuario, nombre: u.nombre, email: u.email || null, esInvitado: Boolean(u.esInvitado) };
     }
 
     function iniciarSesionConUsuario(u) {
-        localStorage.setItem("focus_usuario_activo", JSON.stringify(u));
-        nombreUsuarioActivo.textContent = u.nombre || "Entrenador";
+        const publico = datosPublicos(u);
+        localStorage.setItem("focus_usuario_activo", JSON.stringify(publico));
+        idUsuarioActual = publico.esInvitado ? "invitado" : String(publico.email || publico.usuario || "invitado").toLowerCase();
+        migrarDatosAntiguos();
+        cargarDatosUsuario();
+        nombreUsuarioActivo.textContent = publico.nombre || "Entrenador";
         barraSuperior.classList.remove("oculta");
-        cambiarModo("principal", false);
+        cambiarModo("principal");
     }
 
     function cerrarSesion() {
+        cambiarModo("auth"); // detiene el timer, el bloqueo y guarda la sesión en curso
         localStorage.removeItem("focus_usuario_activo");
-        clearInterval(intervalo);
-        intervalo = null;
-        funcionando = false;
-        detenerBloqueoApps();
-        barraSuperior.classList.add("oculta");
-        cambiarModo("auth", false);
+        idUsuarioActual = null;
         mostrarNotificacion("👋", "Sesión cerrada", "Has vuelto a la pantalla de inicio.");
     }
 
@@ -697,6 +762,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (exitoLogin) { exitoLogin.textContent = ""; exitoLogin.classList.add("oculta"); }
         if (errorRegister) { errorRegister.textContent = ""; errorRegister.classList.add("oculta"); }
         if (exitoRegister) { exitoRegister.textContent = ""; exitoRegister.classList.add("oculta"); }
+    }
+
+    function mostrarErrorAuth(elemento, texto) {
+        elemento.textContent = texto;
+        elemento.classList.remove("oculta");
     }
 
     if (tabLogin && tabRegister) {
@@ -711,15 +781,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (formLogin) {
-        formLogin.addEventListener("submit", (e) => {
+        formLogin.addEventListener("submit", async (e) => {
             e.preventDefault(); limpiarMensajesAuth();
             const ident = loginUsuario.value.trim().toLowerCase();
             const pass = loginPassword.value;
-            if (!ident || !pass) { errorLogin.textContent = "Por favor, completa todos los campos."; errorLogin.classList.remove("oculta"); return; }
-            
-            const usuarioEncontrado = obtenerUsuariosRegistrados().find(u => (u.usuario?.toLowerCase() === ident) || (u.email?.toLowerCase() === ident));
-            if (!usuarioEncontrado) { errorLogin.textContent = "El usuario o correo no está registrado."; errorLogin.classList.remove("oculta"); return; }
-            if (usuarioEncontrado.password !== pass) { errorLogin.textContent = "Contraseña incorrecta."; errorLogin.classList.remove("oculta"); return; }
+            if (!ident || !pass) { mostrarErrorAuth(errorLogin, "Por favor, completa todos los campos."); return; }
+
+            const usuarios = obtenerUsuariosRegistrados();
+            const usuarioEncontrado = usuarios.find(u => (u.usuario?.toLowerCase() === ident) || (u.email?.toLowerCase() === ident));
+            if (!usuarioEncontrado || !(await verificarPassword(usuarioEncontrado, pass))) {
+                // Mismo mensaje en ambos casos para no revelar qué cuentas existen
+                mostrarErrorAuth(errorLogin, "Usuario o contraseña incorrectos.");
+                return;
+            }
+
+            // Migrar cuentas antiguas: reemplazar la contraseña en texto plano por su hash
+            if (!usuarioEncontrado.passwordHash) {
+                const { hash, sal } = await calcularHash(pass);
+                usuarioEncontrado.passwordHash = hash;
+                usuarioEncontrado.sal = sal;
+                delete usuarioEncontrado.password;
+                guardarUsuariosRegistrados(usuarios);
+            }
 
             formLogin.reset(); limpiarMensajesAuth(); iniciarSesionConUsuario(usuarioEncontrado);
             mostrarNotificacion("✨", `¡Hola de nuevo, ${usuarioEncontrado.nombre}!`, "Listo para concentrarte hoy.");
@@ -727,17 +810,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (formRegister) {
-        formRegister.addEventListener("submit", (e) => {
+        formRegister.addEventListener("submit", async (e) => {
             e.preventDefault(); limpiarMensajesAuth();
             const nombre = regNombre.value.trim(); const email = regEmail.value.trim().toLowerCase(); const pass = regPassword.value;
-            if (!nombre || !email.includes("@") || pass.length < 4) { errorRegister.textContent = "Ingresa datos válidos (contraseña mínimo 4 caracteres)."; errorRegister.classList.remove("oculta"); return; }
-            
-            const usuarios = obtenerUsuariosRegistrados();
-            if (usuarios.some((u) => u.usuario?.toLowerCase() === nombre.toLowerCase() || u.email?.toLowerCase() === email)) {
-                errorRegister.textContent = "El usuario o correo ya está registrado."; errorRegister.classList.remove("oculta"); return;
+            if (!nombre || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || pass.length < 6) {
+                mostrarErrorAuth(errorRegister, "Ingresa un nombre, un correo válido y una contraseña de al menos 6 caracteres.");
+                return;
             }
 
-            const nuevoUsuario = { usuario: nombre, nombre: nombre, email: email, password: pass, fechaRegistro: new Date().toISOString() };
+            const usuarios = obtenerUsuariosRegistrados();
+            if (usuarios.some((u) => u.usuario?.toLowerCase() === nombre.toLowerCase() || u.email?.toLowerCase() === email)) {
+                mostrarErrorAuth(errorRegister, "El usuario o correo ya está registrado.");
+                return;
+            }
+
+            const { hash, sal } = await calcularHash(pass);
+            const nuevoUsuario = { usuario: nombre, nombre, email, passwordHash: hash, sal, fechaRegistro: new Date().toISOString() };
             usuarios.push(nuevoUsuario); guardarUsuariosRegistrados(usuarios);
             formRegister.reset(); limpiarMensajesAuth(); iniciarSesionConUsuario(nuevoUsuario);
             mostrarNotificacion("🎉", "¡Cuenta creada!", `Bienvenido, Entrenador ${nombre}.`);
@@ -746,6 +834,81 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (btnInvitado) btnInvitado.addEventListener("click", () => { iniciarSesionConUsuario({ nombre: "Invitado", usuario: "invitado", esInvitado: true }); mostrarNotificacion("🍃", "Modo Invitado", "Has ingresado sin cuenta."); });
     if (btnCerrarSesion) btnCerrarSesion.addEventListener("click", cerrarSesion);
+
+    // =========================================
+    // CONFIGURACIÓN (se guarda por usuario)
+    // =========================================
+    const LIMITES = {
+        estudio: [1, 180],
+        descanso: [1, 90],
+        descansoLargo: [1, 90],
+        ciclos: [1, 8]
+    };
+    const CONFIG_POR_DEFECTO = {
+        estudio: 50,
+        descanso: 10,
+        descansoLargo: 20,
+        ciclos: 4,            // pomodoros antes del descanso largo
+        autoEstudio: false,   // empezar el estudio solo al terminar el descanso
+        modoPop: "inicio"
+    };
+    let config = { ...CONFIG_POR_DEFECTO };
+
+    function limitar(valor, [min, max], porDefecto) {
+        const n = Math.round(Number(valor));
+        return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : porDefecto;
+    }
+
+    function cargarConfig() {
+        const guardada = leerDatoUsuario("config", {}) || {};
+        config = { ...CONFIG_POR_DEFECTO, ...guardada };
+        Object.keys(LIMITES).forEach(k => { config[k] = limitar(config[k], LIMITES[k], CONFIG_POR_DEFECTO[k]); });
+        if (!guardada.modoPop) config.modoPop = localStorage.getItem("focus_modo_pop") || CONFIG_POR_DEFECTO.modoPop;
+        if (!["inicio", "boton", "minimizar"].includes(config.modoPop)) config.modoPop = "inicio";
+        config.autoEstudio = Boolean(config.autoEstudio);
+
+        if (selectModoPop) selectModoPop.value = config.modoPop;
+        if (switchAutoEstudio) switchAutoEstudio.checked = config.autoEstudio;
+        enviarIPC("actualizar-modo-pop", config.modoPop);
+        actualizarConfiguracionTiempos();
+    }
+
+    function guardarConfig() {
+        guardarDatoUsuario("config", config);
+    }
+
+    // =========================================
+    // CICLOS POMODORO (descanso largo cada N pomodoros)
+    // =========================================
+    let pomodorosCompletados = 0; // pomodoros terminados en el ciclo actual
+    let descansoEsLargo = false;
+
+    function fechaLocal(fecha = new Date()) {
+        return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
+    }
+
+    function cargarCiclo() {
+        const guardado = leerDatoUsuario("ciclo", null);
+        // El ciclo vuelve a empezar cada día
+        pomodorosCompletados = (guardado && guardado.fecha === fechaLocal()) ? Number(guardado.completados) || 0 : 0;
+    }
+
+    function guardarCiclo() {
+        guardarDatoUsuario("ciclo", { fecha: fechaLocal(), completados: pomodorosCompletados });
+    }
+
+    function actualizarIndicadorCiclo() {
+        const total = config.ciclos;
+        if (indicadorCicloEstudio) {
+            const actual = Math.min(pomodorosCompletados + 1, total);
+            indicadorCicloEstudio.textContent = `🍅 Pomodoro ${actual} de ${total}`;
+        }
+        if (indicadorCicloDescanso) {
+            indicadorCicloDescanso.textContent = descansoEsLargo
+                ? `🌙 Descanso largo · ¡ciclo de ${total} completado!`
+                : `☕ Descanso corto · ${pomodorosCompletados} de ${total} pomodoros`;
+        }
+    }
 
     // =========================================
     // TEMPORIZADOR Y MODOS
@@ -759,42 +922,52 @@ document.addEventListener("DOMContentLoaded", () => {
         boton.innerHTML = `${icono}<span>${texto}</span>`;
     }
 
-    let minutosEstudioConfig = 50;
-    let minutosDescansoConfig = 10;
-    let tiempoEstudio = minutosEstudioConfig * 60;
-    let tiempoDescanso = minutosDescansoConfig * 60;
     let modoActual = "auth";
-    let segundosRestantes = tiempoEstudio;
+    let segundosRestantes = config.estudio * 60;
     let intervalo = null;
     let funcionando = false;
+    // Hora exacta en que termina el bloque: así el tiempo no se atrasa aunque
+    // la ventana esté minimizada o el equipo vaya lento.
+    let finTimestamp = null;
 
-    let modoPopTemporizador = localStorage.getItem("focus_modo_pop") || "inicio";
+    function duracionModoActual() {
+        if (modoActual === "descanso") return (descansoEsLargo ? config.descansoLargo : config.descanso) * 60;
+        return config.estudio * 60;
+    }
 
     if (selectModoPop) {
-        selectModoPop.value = modoPopTemporizador;
-        if (ipcRenderer) ipcRenderer.send("actualizar-modo-pop", modoPopTemporizador);
         selectModoPop.addEventListener("change", (e) => {
-            modoPopTemporizador = e.target.value;
-            localStorage.setItem("focus_modo_pop", modoPopTemporizador);
-            if (ipcRenderer) ipcRenderer.send("actualizar-modo-pop", modoPopTemporizador);
+            config.modoPop = e.target.value;
+            guardarConfig();
+            enviarIPC("actualizar-modo-pop", config.modoPop);
+        });
+    }
+
+    if (switchAutoEstudio) {
+        switchAutoEstudio.addEventListener("change", (e) => {
+            config.autoEstudio = e.target.checked;
+            guardarConfig();
         });
     }
 
     function evaluarAbrirPop() {
-        if (ipcRenderer && modoPopTemporizador === "inicio") ipcRenderer.send("abrir-pop-temporizador");
+        if (config.modoPop === "inicio") enviarIPC("abrir-pop-temporizador");
     }
 
-    const toggleManualPop = () => { if (ipcRenderer) ipcRenderer.send("toggle-pop-temporizador"); };
+    const toggleManualPop = () => enviarIPC("toggle-pop-temporizador");
     if (btnPopTemporizador) btnPopTemporizador.addEventListener("click", toggleManualPop);
     if (btnPopTemporizadorDescanso) btnPopTemporizadorDescanso.addEventListener("click", toggleManualPop);
 
     function actualizarConfiguracionTiempos() {
-        if (displayMinutosEstudio) displayMinutosEstudio.textContent = minutosEstudioConfig;
-        if (displayMinutosDescanso) displayMinutosDescanso.textContent = minutosDescansoConfig;
-        tiempoEstudio = minutosEstudioConfig * 60;
-        tiempoDescanso = minutosDescansoConfig * 60;
-        if (modoActual === "estudio" && !funcionando) { segundosRestantes = tiempoEstudio; actualizarTemporizador(); }
-        else if (modoActual === "descanso" && !funcionando) { segundosRestantes = tiempoDescanso; actualizarTemporizador(); }
+        if (displayMinutosEstudio) displayMinutosEstudio.textContent = config.estudio;
+        if (displayMinutosDescanso) displayMinutosDescanso.textContent = config.descanso;
+        if (displayMinutosDescansoLargo) displayMinutosDescansoLargo.textContent = config.descansoLargo;
+        if (displayCiclos) displayCiclos.textContent = config.ciclos;
+        if ((modoActual === "estudio" || modoActual === "descanso") && !funcionando) {
+            segundosRestantes = duracionModoActual();
+            actualizarTemporizador();
+        }
+        actualizarIndicadorCiclo();
     }
 
     function actualizarTemporizador() {
@@ -802,164 +975,259 @@ document.addEventListener("DOMContentLoaded", () => {
         const texto = `${String(min).padStart(2, "0")}:${String(seg).padStart(2, "0")}`;
         if (modoActual === "estudio" && temporizador) temporizador.textContent = texto;
         else if (modoActual === "descanso" && temporizadorDescanso) temporizadorDescanso.textContent = texto;
-        if (ipcRenderer) ipcRenderer.send("actualizar-tiempo", texto);
+        enviarIPC("actualizar-tiempo", { texto, modo: modoActual, largo: descansoEsLargo, corriendo: funcionando });
     }
 
-    function contarTiempo() {
-        segundosRestantes--; actualizarTemporizador();
-        if (segundosRestantes <= 0) {
-            clearInterval(intervalo); intervalo = null; funcionando = false; detenerBloqueoApps();
-            if (modoActual === "estudio") { mostrarNotificacion("☕", "¡Sesión de estudio cumplida!", "Excelente trabajo. Toca relajarse con Snorlax."); cambiarModo("descanso", true); }
-            else { mostrarNotificacion("📚", "¡Descanso finalizado!", "Energías renovadas. Comenzando nuevo bloque de estudio."); cambiarModo("estudio", false); }
+    function calcularRestantes() {
+        return Math.max(0, Math.ceil((finTimestamp - Date.now()) / 1000));
+    }
+
+    function tick() {
+        const restantes = calcularRestantes();
+        if (restantes !== segundosRestantes) {
+            segundosRestantes = restantes;
+            actualizarTemporizador();
+        }
+        if (restantes <= 0) terminarBloque();
+    }
+
+    function botonDelModo() {
+        return modoActual === "estudio" ? botonInicio : botonDescanso;
+    }
+
+    function textoBotonInicio() {
+        const empezado = segundosRestantes < duracionModoActual();
+        if (empezado) return "Reanudar";
+        return modoActual === "estudio" ? "Empezar estudio" : "Empezar descanso";
+    }
+
+    function iniciarConteo() {
+        if (funcionando || (modoActual !== "estudio" && modoActual !== "descanso")) return;
+        if (segundosRestantes <= 0) segundosRestantes = duracionModoActual();
+        funcionando = true;
+        finTimestamp = Date.now() + segundosRestantes * 1000;
+        intervalo = setInterval(tick, 250);
+        abrirOReanudarSesion();
+        fijarBotonPrincipal(botonDelModo(), "pausa", "Pausar");
+        enviarIPC("estado-temporizador", true);
+        evaluarAbrirPop();
+        if (modoActual === "estudio") {
+            iniciarBloqueoApps();
+            enviarIPC("cerrar-ventana-juegos"); // los minijuegos son solo para el descanso
+        }
+        actualizarTemporizador();
+    }
+
+    // Detiene el conteo sin perder el tiempo restante
+    function detenerConteo() {
+        if (intervalo) clearInterval(intervalo);
+        intervalo = null;
+        if (funcionando && finTimestamp) segundosRestantes = calcularRestantes();
+        funcionando = false;
+        finTimestamp = null;
+        pausarSesion();
+        detenerBloqueoApps();
+        enviarIPC("estado-temporizador", false);
+    }
+
+    function pausarConteo() {
+        if (!funcionando) return;
+        detenerConteo();
+        fijarBotonPrincipal(botonDelModo(), "play", "Reanudar");
+        if (config.modoPop === "inicio") enviarIPC("cerrar-pop-temporizador");
+        actualizarTemporizador();
+    }
+
+    function terminarBloque() {
+        detenerConteo();
+        registrarSesion(true);
+        if (modoActual === "estudio") {
+            pomodorosCompletados++;
+            const tocaLargo = pomodorosCompletados >= config.ciclos;
+            guardarCiclo();
+            mostrarNotificacion(
+                "☕",
+                "¡Sesión de estudio cumplida!",
+                tocaLargo
+                    ? `¡Completaste ${config.ciclos} pomodoros! Te ganaste un descanso largo de ${config.descansoLargo} min.`
+                    : "Excelente trabajo. Toca relajarse con Snorlax.",
+                true
+            );
+            cambiarModo("descanso", { autoIniciar: true, largo: tocaLargo });
+        } else {
+            mostrarNotificacion(
+                "📚",
+                "¡Descanso finalizado!",
+                config.autoEstudio ? "Energías renovadas. Comenzando nuevo bloque de estudio." : "Cuando quieras, pulsa «Empezar estudio».",
+                true
+            );
+            cambiarModo("estudio", { autoIniciar: config.autoEstudio });
         }
     }
 
     function reiniciarTemporizador() {
-        clearInterval(intervalo); intervalo = null; funcionando = false; detenerBloqueoApps();
-        if (modoActual === "estudio") { segundosRestantes = tiempoEstudio; fijarBotonPrincipal(botonInicio, "play", "Empezar estudio"); }
-        else if (modoActual === "descanso") { segundosRestantes = tiempoDescanso; fijarBotonPrincipal(botonDescanso, "play", "Empezar descanso"); }
-        actualizarTemporizador(); mostrarNotificacion("↺", "Contador reiniciado", "El tiempo ha vuelto al inicio.");
+        detenerConteo();
+        registrarSesion(false);
+        segundosRestantes = duracionModoActual();
+        fijarBotonPrincipal(botonDelModo(), "play", textoBotonInicio());
+        if (config.modoPop === "inicio") enviarIPC("cerrar-pop-temporizador");
+        actualizarTemporizador();
+        mostrarNotificacion("↺", "Contador reiniciado", "El tiempo ha vuelto al inicio.");
     }
 
     function controlarTemporizador() {
-        const botonActivo = modoActual === "estudio" ? botonInicio : botonDescanso;
-        if (funcionando) {
-            clearInterval(intervalo); intervalo = null; funcionando = false;
-            fijarBotonPrincipal(botonActivo, "play", "Reanudar"); detenerBloqueoApps();
-            if (ipcRenderer) { ipcRenderer.send("estado-temporizador", false); if (modoPopTemporizador === "inicio") ipcRenderer.send("cerrar-pop-temporizador"); }
-        } else {
-            funcionando = true; intervalo = setInterval(contarTiempo, 1000);
-            fijarBotonPrincipal(botonActivo, "pausa", "Pausar");
-            if (modoActual === "estudio") iniciarBloqueoApps();
-            if (ipcRenderer) { ipcRenderer.send("estado-temporizador", true); evaluarAbrirPop(); }
-        }
+        if (funcionando) pausarConteo();
+        else iniciarConteo();
     }
 
-    function cambiarModo(nuevoModo, autoIniciar = false) {
-        clearInterval(intervalo); intervalo = null; funcionando = false; detenerBloqueoApps();
-        modoActual = nuevoModo;
-        pantallaAuth.classList.add("oculta"); pantallaPrincipal.classList.add("oculta"); pantallaEstudio.classList.add("oculta"); pantallaDescanso.classList.add("oculta");
-        if (pantallaHistorial) pantallaHistorial.classList.add("oculta");
+    // Muestra la pantalla de un modo sin tocar el temporizador
+    function mostrarPantalla(modo) {
+        [pantallaAuth, pantallaPrincipal, pantallaEstudio, pantallaDescanso, pantallaHistorial]
+            .forEach(p => { if (p) p.classList.add("oculta"); });
 
-        if ((modoActual === "auth" || modoActual === "principal") && ipcRenderer) {
-            ipcRenderer.send("cerrar-pop-temporizador"); ipcRenderer.send("estado-temporizador", false);
-        }
-
-        if (modoActual === "auth") {
+        if (modo === "auth") {
             pantallaAuth.classList.remove("oculta");
             barraSuperior.classList.add("oculta");
+            if (btnCambiarTema) btnCambiarTema.classList.add("oculta");
+            document.documentElement.dataset.set = "clasico";
             document.body.className = "tema-auth";
             document.title = "FOCUS - INICIAR SESIÓN";
             limpiarMensajesAuth();
             if (panelObjetivos) panelObjetivos.classList.add("oculta");
-        } else {
-            if (panelObjetivos) {
-                panelObjetivos.classList.remove("oculta");
-                if (modoActual === "principal") {
-                    const contPrincipal = document.getElementById("contenedorPrincipalBulbasaur");
-                    const colBulba = contPrincipal ? contPrincipal.querySelector(".columna-bulbasaur") : null;
-                    if (contPrincipal && colBulba && panelObjetivos.parentElement !== contPrincipal) {
-                        contPrincipal.insertBefore(panelObjetivos, colBulba);
-                    }
-                } else if (modoActual === "estudio") {
-                    const zonaEstudio = document.getElementById("zonaEstudioLayout");
-                    const colCentro = zonaEstudio ? zonaEstudio.querySelector(".columna-centro-modo") : null;
-                    if (zonaEstudio && colCentro && panelObjetivos.parentElement !== zonaEstudio) {
-                        zonaEstudio.insertBefore(panelObjetivos, colCentro);
-                    }
-                } else if (modoActual === "descanso") {
-                    const zonaDescanso = document.getElementById("zonaDescansoLayout");
-                    const colCentro = zonaDescanso ? zonaDescanso.querySelector(".columna-centro-modo") : null;
-                    if (zonaDescanso && colCentro && panelObjetivos.parentElement !== zonaDescanso) {
-                        zonaDescanso.insertBefore(panelObjetivos, colCentro);
-                    }
-                }
-            }
+            return;
+        }
 
-            if (modoActual === "principal") {
-                pantallaPrincipal.classList.remove("oculta");
-                barraSuperior.classList.remove("oculta");
-                document.body.className = "tema-bulbasaur";
-                document.title = "FOCUS - PANEL PRINCIPAL";
-            } else if (modoActual === "descanso") {
-                pantallaDescanso.classList.remove("oculta");
-                barraSuperior.classList.remove("oculta");
-                document.body.className = "tema-descanso";
-                document.title = "FOCUS - MODO DESCANSO";
-                segundosRestantes = tiempoDescanso;
-                actualizarTemporizador();
-                if (autoIniciar) {
-                    funcionando = true;
-                    intervalo = setInterval(contarTiempo, 1000);
-                    fijarBotonPrincipal(botonDescanso, "pausa", "Pausar");
-                    if (ipcRenderer) { ipcRenderer.send("estado-temporizador", true); evaluarAbrirPop(); }
-                } else fijarBotonPrincipal(botonDescanso, "play", "Empezar descanso");
-            } else {
-                pantallaEstudio.classList.remove("oculta");
-                barraSuperior.classList.remove("oculta");
-                document.body.className = "tema-estudio";
-                document.title = "FOCUS - MODO ESTUDIO";
-                segundosRestantes = tiempoEstudio;
-                actualizarTemporizador();
-                if (autoIniciar) {
-                    funcionando = true;
-                    intervalo = setInterval(contarTiempo, 1000);
-                    fijarBotonPrincipal(botonInicio, "pausa", "Pausar");
-                    if (ipcRenderer) { ipcRenderer.send("estado-temporizador", true); evaluarAbrirPop(); }
-                    iniciarBloqueoApps();
-                } else fijarBotonPrincipal(botonInicio, "play", "Empezar estudio");
+        barraSuperior.classList.remove("oculta");
+        if (btnCambiarTema) btnCambiarTema.classList.remove("oculta");
+        document.documentElement.dataset.set = setPokemon;
+
+        // El panel de objetivos se mueve a la pantalla visible
+        const destinos = {
+            principal: ["contenedorPrincipalBulbasaur", ".columna-bulbasaur"],
+            estudio: ["zonaEstudioLayout", ".columna-centro-modo"],
+            descanso: ["zonaDescansoLayout", ".columna-centro-modo"]
+        };
+        if (panelObjetivos && destinos[modo]) {
+            panelObjetivos.classList.remove("oculta");
+            const contenedor = document.getElementById(destinos[modo][0]);
+            const columna = contenedor ? contenedor.querySelector(destinos[modo][1]) : null;
+            if (contenedor && columna && panelObjetivos.parentElement !== contenedor) {
+                contenedor.insertBefore(panelObjetivos, columna);
             }
         }
+
+        if (modo === "principal") {
+            pantallaPrincipal.classList.remove("oculta");
+            document.body.className = "tema-bulbasaur";
+            document.title = "FOCUS - PANEL PRINCIPAL";
+        } else if (modo === "descanso") {
+            pantallaDescanso.classList.remove("oculta");
+            document.body.className = "tema-descanso";
+            document.title = descansoEsLargo ? "FOCUS - DESCANSO LARGO" : "FOCUS - MODO DESCANSO";
+        } else if (modo === "estudio") {
+            pantallaEstudio.classList.remove("oculta");
+            document.body.className = "tema-estudio";
+            document.title = "FOCUS - MODO ESTUDIO";
+        }
+        actualizarIndicadorCiclo();
+        actualizarBotonTema();
     }
 
-    if (btnMenosEstudio) btnMenosEstudio.addEventListener("click", () => { if (minutosEstudioConfig > 1) { minutosEstudioConfig--; actualizarConfiguracionTiempos(); }});
-    if (btnMasEstudio) btnMasEstudio.addEventListener("click", () => { if (minutosEstudioConfig < 180) { minutosEstudioConfig++; actualizarConfiguracionTiempos(); }});
-    if (btnMenosDescanso) btnMenosDescanso.addEventListener("click", () => { if (minutosDescansoConfig > 1) { minutosDescansoConfig--; actualizarConfiguracionTiempos(); }});
-    if (btnMasDescanso) btnMasDescanso.addEventListener("click", () => { if (minutosDescansoConfig < 90) { minutosDescansoConfig++; actualizarConfiguracionTiempos(); }});
-    function aplicarPreset(estudio, descanso) { minutosEstudioConfig = estudio; minutosDescansoConfig = descanso; actualizarConfiguracionTiempos(); }
-    if (btnPreset25) btnPreset25.addEventListener("click", () => aplicarPreset(25, 5));
-    if (btnPreset50) btnPreset50.addEventListener("click", () => aplicarPreset(50, 10));
-    if (btnPreset90) btnPreset90.addEventListener("click", () => aplicarPreset(90, 15));
+    // opciones: { autoIniciar, largo }. También acepta un booleano (autoIniciar) por compatibilidad.
+    function cambiarModo(nuevoModo, opciones = {}) {
+        if (typeof opciones === "boolean") opciones = { autoIniciar: opciones };
+        const { autoIniciar = false, largo = false } = opciones;
 
-    if (btnIrEstudioDesdeBulbasaur) btnIrEstudioDesdeBulbasaur.addEventListener("click", () => { actualizarConfiguracionTiempos(); cambiarModo("estudio", false); });
-    if (btnIrDescansoDesdeBulbasaur) btnIrDescansoDesdeBulbasaur.addEventListener("click", () => { actualizarConfiguracionTiempos(); cambiarModo("descanso", false); });
+        detenerConteo();
+        registrarSesion(false); // si había una sesión a medias, se guarda como interrumpida
+
+        modoActual = nuevoModo;
+
+        if (modoActual === "descanso") {
+            descansoEsLargo = largo;
+            if (largo) {
+                pomodorosCompletados = 0; // empieza un ciclo nuevo
+                guardarCiclo();
+            }
+        }
+
+        if (modoActual === "auth" || modoActual === "principal") {
+            enviarIPC("cerrar-pop-temporizador");
+        } else {
+            segundosRestantes = duracionModoActual();
+            actualizarTemporizador();
+            fijarBotonPrincipal(botonDelModo(), "play", textoBotonInicio());
+        }
+
+        mostrarPantalla(modoActual);
+
+        if (autoIniciar) iniciarConteo();
+    }
+
+    function ajustarConfig(clave, delta) {
+        const nuevo = limitar(config[clave] + delta, LIMITES[clave], config[clave]);
+        if (nuevo === config[clave]) return;
+        config[clave] = nuevo;
+        guardarConfig();
+        actualizarConfiguracionTiempos();
+    }
+
+    if (btnMenosEstudio) btnMenosEstudio.addEventListener("click", () => ajustarConfig("estudio", -1));
+    if (btnMasEstudio) btnMasEstudio.addEventListener("click", () => ajustarConfig("estudio", 1));
+    if (btnMenosDescanso) btnMenosDescanso.addEventListener("click", () => ajustarConfig("descanso", -1));
+    if (btnMasDescanso) btnMasDescanso.addEventListener("click", () => ajustarConfig("descanso", 1));
+    if (btnMenosDescansoLargo) btnMenosDescansoLargo.addEventListener("click", () => ajustarConfig("descansoLargo", -1));
+    if (btnMasDescansoLargo) btnMasDescansoLargo.addEventListener("click", () => ajustarConfig("descansoLargo", 1));
+    if (btnMenosCiclos) btnMenosCiclos.addEventListener("click", () => ajustarConfig("ciclos", -1));
+    if (btnMasCiclos) btnMasCiclos.addEventListener("click", () => ajustarConfig("ciclos", 1));
+
+    function aplicarPreset(estudio, descanso, descansoLargo) {
+        config.estudio = estudio;
+        config.descanso = descanso;
+        config.descansoLargo = descansoLargo;
+        guardarConfig();
+        actualizarConfiguracionTiempos();
+    }
+    if (btnPreset25) btnPreset25.addEventListener("click", () => aplicarPreset(25, 5, 15));
+    if (btnPreset50) btnPreset50.addEventListener("click", () => aplicarPreset(50, 10, 20));
+    if (btnPreset90) btnPreset90.addEventListener("click", () => aplicarPreset(90, 15, 30));
+
+    if (btnIrEstudioDesdeBulbasaur) btnIrEstudioDesdeBulbasaur.addEventListener("click", () => cambiarModo("estudio"));
+    if (btnIrDescansoDesdeBulbasaur) btnIrDescansoDesdeBulbasaur.addEventListener("click", () => cambiarModo("descanso"));
 
     if (botonInicio) botonInicio.addEventListener("click", controlarTemporizador);
     if (botonDescanso) botonDescanso.addEventListener("click", controlarTemporizador);
-    if (botonCambiarModo) botonCambiarModo.addEventListener("click", () => cambiarModo("descanso", false));
-    if (botonCambiarModoDescanso) botonCambiarModoDescanso.addEventListener("click", () => cambiarModo("estudio", false));
+    if (botonCambiarModo) botonCambiarModo.addEventListener("click", () => cambiarModo("descanso"));
+    if (botonCambiarModoDescanso) botonCambiarModoDescanso.addEventListener("click", () => cambiarModo("estudio"));
     if (botonReiniciar) botonReiniciar.addEventListener("click", reiniciarTemporizador);
     if (botonReiniciarDescanso) botonReiniciarDescanso.addEventListener("click", reiniciarTemporizador);
-    if (botonAjustesEstudio) botonAjustesEstudio.addEventListener("click", () => cambiarModo("principal", false));
-    if (botonAjustesDescanso) botonAjustesDescanso.addEventListener("click", () => cambiarModo("principal", false));
+    if (botonAjustesEstudio) botonAjustesEstudio.addEventListener("click", () => cambiarModo("principal"));
+    if (botonAjustesDescanso) botonAjustesDescanso.addEventListener("click", () => cambiarModo("principal"));
 
     // =========================================
     // ABRIR SALA DE JUEGOS EN NUEVA VENTANA
     // =========================================
     if (botonJugar) {
-        botonJugar.addEventListener("click", () => {
-            if (ipcRenderer) {
-                ipcRenderer.send("abrir-ventana-juegos");
-            }
-        });
+        botonJugar.addEventListener("click", () => enviarIPC("abrir-ventana-juegos"));
     }
 
     // =========================================
     // LÓGICA DE OBJETIVOS (TO-DO LIST)
     // =========================================
     let objetivos = [];
-    try {
-        const objsGuardados = localStorage.getItem("focus_objetivos");
-        objetivos = objsGuardados ? JSON.parse(objsGuardados) : [];
-    } catch (e) {
-        objetivos = [];
-    }
 
     const badgeContadorObjetivos = document.getElementById("badgeContadorObjetivos");
     const btnLimpiarObjetivos = document.getElementById("btnLimpiarObjetivos");
 
+    function cargarObjetivos() {
+        const guardados = leerDatoUsuario("objetivos", []);
+        objetivos = Array.isArray(guardados)
+            ? guardados.filter(o => o && typeof o.texto === "string")
+            : [];
+    }
+
     function guardarObjetivos() {
-        localStorage.setItem("focus_objetivos", JSON.stringify(objetivos));
+        guardarDatoUsuario("objetivos", objetivos);
     }
 
     function renderizarObjetivos() {
@@ -970,7 +1238,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (badgeContadorObjetivos) {
             badgeContadorObjetivos.textContent = `${pendientes} ${pendientes === 1 ? "pendiente" : "pendientes"}`;
         }
-        
+
         if (objetivos.length === 0) {
             listaObjetivos.innerHTML = `
                 <div class="vacio-lista-objetivos">
@@ -984,7 +1252,7 @@ document.addEventListener("DOMContentLoaded", () => {
         objetivos.forEach((obj, index) => {
             const li = document.createElement("li");
             li.className = `item-objetivo ${obj.completado ? "completado" : ""}`;
-            
+
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.className = "checkbox-objetivo";
@@ -1015,9 +1283,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function agregarObjetivo() {
         if (!inputNuevoObjetivo) return;
-        const texto = inputNuevoObjetivo.value.trim();
+        const texto = inputNuevoObjetivo.value.trim().slice(0, 200);
         if (texto.length > 0) {
-            objetivos.push({ texto: texto, completado: false });
+            objetivos.push({ texto, completado: false });
             guardarObjetivos();
             renderizarObjetivos();
             inputNuevoObjetivo.value = "";
@@ -1042,9 +1310,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (btnAgregarObjetivo) btnAgregarObjetivo.addEventListener("click", agregarObjetivo);
-    
+
     if (inputNuevoObjetivo) {
-        inputNuevoObjetivo.addEventListener("keypress", (e) => {
+        inputNuevoObjetivo.addEventListener("keydown", (e) => {
             if (e.key === "Enter") agregarObjetivo();
         });
     }
@@ -1064,89 +1332,94 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================
     // HISTORIAL DE SESIONES
     // =========================================
-    const HISTORIAL_KEY = "focus_historial";
-    const MAX_SESIONES = 90;
+    const MAX_SESIONES = 300;
 
-    // Variables de estado de sesión activa
-    let sesionActiva = null; // { tipo, horaInicio, minutosTotales, inicioTimestamp }
+    // Sesión en curso. Solo cuenta el tiempo con el reloj andando (las pausas no suman).
+    let sesionActiva = null; // { tipo, largo, minutosPlanificados, fecha, horaInicio, msActivos, reanudadoEn }
 
     function cargarHistorial() {
-        try {
-            const raw = localStorage.getItem(HISTORIAL_KEY);
-            return raw ? JSON.parse(raw) : [];
-        } catch (e) { return []; }
+        const lista = leerDatoUsuario("historial", []);
+        return Array.isArray(lista) ? lista : [];
     }
 
     function guardarHistorial(lista) {
-        // Limitar a las últimas MAX_SESIONES
-        const recortada = lista.slice(-MAX_SESIONES);
-        localStorage.setItem(HISTORIAL_KEY, JSON.stringify(recortada));
+        guardarDatoUsuario("historial", lista.slice(-MAX_SESIONES));
     }
 
-    function iniciarSesionHistorial(tipo, minutosTotales) {
-        const ahora = new Date();
-        sesionActiva = {
-            tipo,
-            minutosTotales,
-            horaInicio: `${String(ahora.getHours()).padStart(2,"0")}:${String(ahora.getMinutes()).padStart(2,"0")}`,
-            inicioTimestamp: Date.now()
-        };
+    function abrirOReanudarSesion() {
+        const ahora = Date.now();
+        if (!sesionActiva) {
+            const inicio = new Date(ahora);
+            sesionActiva = {
+                tipo: modoActual === "descanso" ? "descanso" : "estudio",
+                largo: modoActual === "descanso" && descansoEsLargo,
+                minutosPlanificados: Math.round(duracionModoActual() / 60),
+                fecha: fechaLocal(inicio),
+                horaInicio: `${String(inicio.getHours()).padStart(2, "0")}:${String(inicio.getMinutes()).padStart(2, "0")}`,
+                msActivos: 0,
+                reanudadoEn: ahora
+            };
+        } else if (!sesionActiva.reanudadoEn) {
+            sesionActiva.reanudadoEn = ahora;
+        }
+    }
+
+    function pausarSesion() {
+        if (sesionActiva && sesionActiva.reanudadoEn) {
+            sesionActiva.msActivos += Date.now() - sesionActiva.reanudadoEn;
+            sesionActiva.reanudadoEn = null;
+        }
     }
 
     function registrarSesion(completada) {
         if (!sesionActiva) return;
-        const ahora = Date.now();
-        const duracionMs = ahora - sesionActiva.inicioTimestamp;
-        const duracionMin = Math.max(1, Math.round(duracionMs / 60000));
+        pausarSesion();
+        const s = sesionActiva;
+        sesionActiva = null;
 
-        // No registrar sesiones menores a 1 minuto efectivo
-        if (duracionMin < 1) { sesionActiva = null; return; }
+        // Nunca se cuenta más que lo planificado (por ejemplo, si la PC se suspendió durante la sesión)
+        const msActivos = Math.min(s.msActivos, s.minutosPlanificados * 60000);
 
-        const hoy = new Date();
-        const sesion = {
-            id: "ses_" + ahora,
-            fecha: `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,"0")}-${String(hoy.getDate()).padStart(2,"0")}`,
-            horaInicio: sesionActiva.horaInicio,
-            tipo: sesionActiva.tipo, // "estudio" | "descanso"
-            duracionMin,
-            minutosPlanificados: sesionActiva.minutosTotales,
-            completada
-        };
+        // Las sesiones interrumpidas de menos de 1 minuto no se guardan
+        if (!completada && msActivos < 60000) return;
+        const duracionMin = Math.max(1, Math.round(msActivos / 60000));
 
         const lista = cargarHistorial();
-        lista.push(sesion);
+        lista.push({
+            id: "ses_" + Date.now(),
+            fecha: s.fecha,
+            horaInicio: s.horaInicio,
+            tipo: s.tipo,
+            largo: s.largo,
+            duracionMin,
+            minutosPlanificados: s.minutosPlanificados,
+            completada
+        });
         guardarHistorial(lista);
-        sesionActiva = null;
     }
+
+    // Si se cierra la app con una sesión a medias, se guarda como interrumpida
+    window.addEventListener("beforeunload", () => {
+        if (idUsuarioActual) registrarSesion(false);
+    });
 
     // ---- Métricas ----
     function calcularMetricas(lista) {
-        const hoy = new Date();
-        const fechaHoy = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,"0")}-${String(hoy.getDate()).padStart(2,"0")}`;
+        const fechaHoy = fechaLocal();
+        const estudio = lista.filter(s => s.tipo === "estudio");
 
-        const minHoy = lista
-            .filter(s => s.fecha === fechaHoy && s.tipo === "estudio")
-            .reduce((acc, s) => acc + s.duracionMin, 0);
+        const minHoy = estudio.filter(s => s.fecha === fechaHoy).reduce((acc, s) => acc + s.duracionMin, 0);
+        const totalMin = estudio.reduce((acc, s) => acc + s.duracionMin, 0);
+        const completas = estudio.filter(s => s.completada).length;
 
-        const totalMin = lista
-            .filter(s => s.tipo === "estudio")
-            .reduce((acc, s) => acc + s.duracionMin, 0);
-
-        const completas = lista.filter(s => s.completada && s.tipo === "estudio").length;
-
-        // Racha: días consecutivos con al menos 1 sesión de estudio
-        const diasConEstudio = [...new Set(
-            lista.filter(s => s.tipo === "estudio").map(s => s.fecha)
-        )].sort().reverse();
-
+        // Racha: días consecutivos con estudio. Si hoy aún no estudiaste, la racha de ayer sigue viva.
+        const dias = new Set(estudio.map(s => s.fecha));
+        const diaCheck = new Date();
+        if (!dias.has(fechaLocal(diaCheck))) diaCheck.setDate(diaCheck.getDate() - 1);
         let racha = 0;
-        let diaCheck = new Date();
-        for (const dia of diasConEstudio) {
-            const diaStr = `${diaCheck.getFullYear()}-${String(diaCheck.getMonth()+1).padStart(2,"0")}-${String(diaCheck.getDate()).padStart(2,"0")}`;
-            if (dia === diaStr) {
-                racha++;
-                diaCheck.setDate(diaCheck.getDate() - 1);
-            } else { break; }
+        while (dias.has(fechaLocal(diaCheck))) {
+            racha++;
+            diaCheck.setDate(diaCheck.getDate() - 1);
         }
 
         return { minHoy, totalMin, completas, racha };
@@ -1162,13 +1435,13 @@ document.addEventListener("DOMContentLoaded", () => {
     function etiquetaDia(fechaStr) {
         const [y, m, d] = fechaStr.split("-").map(Number);
         const fecha = new Date(y, m - 1, d);
-        const hoy = new Date(); hoy.setHours(0,0,0,0);
-        const ayer = new Date(hoy); ayer.setDate(hoy.getDate()-1);
-        const diasSemana = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
-        const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+        const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+        const ayer = new Date(hoy); ayer.setDate(hoy.getDate() - 1);
+        const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         if (fecha.getTime() === hoy.getTime()) return "🗓️ Hoy";
         if (fecha.getTime() === ayer.getTime()) return "📆 Ayer";
-        return `${diasSemana[fecha.getDay()]} ${d} de ${meses[m-1]}`;
+        return `${diasSemana[fecha.getDay()]} ${d} de ${meses[m - 1]}`;
     }
 
     // ---- Renderizado del historial ----
@@ -1180,7 +1453,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const filtrada = filtroActual === "todo" ? lista : lista.filter(s => s.tipo === filtroActual);
         const invertida = [...filtrada].reverse(); // más recientes primero
 
-        // Actualizar métricas
         const metricas = calcularMetricas(lista);
         if (metricaRacha) metricaRacha.textContent = metricas.racha;
         if (metricaHoy) metricaHoy.textContent = formatMin(metricas.minHoy);
@@ -1221,16 +1493,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             for (const s of sesiones) {
                 const esEstudio = s.tipo === "estudio";
+                const titulo = esEstudio ? "Sesión de Estudio" : (s.largo ? "Descanso largo" : "Descanso");
                 const tarjeta = document.createElement("div");
                 tarjeta.className = "tarjeta-sesion";
                 tarjeta.innerHTML = `
-                    <div class="sesion-icono-tipo ${s.tipo}">${esEstudio ? "📚" : "😴"}</div>
+                    <div class="sesion-icono-tipo ${esEstudio ? "estudio" : "descanso"}">${esEstudio ? "📚" : (s.largo ? "🌙" : "😴")}</div>
                     <div class="sesion-info">
-                        <p class="sesion-titulo">${esEstudio ? "Sesión de Estudio" : "Descanso"}</p>
-                        <p class="sesion-subtitulo">Inicio: ${s.horaInicio} · Planificado: ${s.minutosPlanificados} min</p>
+                        <p class="sesion-titulo">${titulo}</p>
+                        <p class="sesion-subtitulo">Inicio: ${escapeHtml(s.horaInicio)} · Planificado: ${Number(s.minutosPlanificados) || 0} min</p>
                     </div>
                     <div class="sesion-duracion">
-                        ${formatMin(s.duracionMin)}
+                        ${formatMin(Number(s.duracionMin) || 0)}
                         <span>${s.completada ? "completada" : "interrumpida"}</span>
                     </div>
                     <span class="sesion-badge ${s.completada ? "completa" : "interrumpida"}">${s.completada ? "✅ Completa" : "⚡ Parcial"}</span>
@@ -1242,13 +1515,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ---- Pantalla historial ----
-    let modoPrevioAlHistorial = "principal";
-
+    // Abrir el historial NO detiene el temporizador: sigue corriendo de fondo.
     function abrirHistorial() {
-        modoPrevioAlHistorial = modoActual || "principal";
-        // Ocultar todo menos barra y historial
-        const pantallas = [pantallaAuth, pantallaPrincipal, pantallaEstudio, pantallaDescanso, panelObjetivos];
-        pantallas.forEach(p => { if (p) p.classList.add("oculta"); });
+        [pantallaAuth, pantallaPrincipal, pantallaEstudio, pantallaDescanso, panelObjetivos]
+            .forEach(p => { if (p) p.classList.add("oculta"); });
         if (pantallaHistorial) pantallaHistorial.classList.remove("oculta");
         document.body.className = "tema-bulbasaur";
         document.title = "FOCUS - Historial";
@@ -1256,8 +1526,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function cerrarHistorial() {
-        if (pantallaHistorial) pantallaHistorial.classList.add("oculta");
-        cambiarModo(modoPrevioAlHistorial, false);
+        mostrarPantalla(modoActual); // vuelve a la misma pantalla sin reiniciar el tiempo
     }
 
     if (btnAbrirHistorial) btnAbrirHistorial.addEventListener("click", abrirHistorial);
@@ -1266,14 +1535,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnLimpiarHistorial) {
         btnLimpiarHistorial.addEventListener("click", () => {
             if (confirm("¿Borrar todo el historial de sesiones? Esta acción no se puede deshacer.")) {
-                localStorage.removeItem(HISTORIAL_KEY);
+                localStorage.removeItem(claveUsuario("historial"));
                 renderizarHistorial();
                 mostrarNotificacion("🗑️", "Historial borrado", "Se eliminaron todas las sesiones guardadas.");
             }
         });
     }
 
-    // Filtros
     document.querySelectorAll(".btn-filtro-hist").forEach(btn => {
         btn.addEventListener("click", () => {
             document.querySelectorAll(".btn-filtro-hist").forEach(b => b.classList.remove("activo"));
@@ -1283,83 +1551,125 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // ---- Enganchar el guardado de sesiones al timer ----
-    // Parchamos contarTiempo y controlarTemporizador para registrar sesiones
+    // =========================================
+    // SETS DE POKÉMON (cambian la imagen y la paleta de colores)
+    // =========================================
+    // "clasico": Bulbasaur / Gengar / Snorlax  ·  "alt": Clefairy / Mewtwo / Pikachu
+    // Los colores del set alternativo están en temas-pokemon.css (generado con `npm run temas`).
+    const SETS_POKEMON = {
+        clasico: {
+            principal: { nombre: "Bulbasaur", src: "assets/WnES.gif" },
+            estudio: { nombre: "Gengar", src: "assets/shiny-gengar-ig.gif" },
+            descanso: { nombre: "Snorlax", src: "assets/Pixel Eat Sticker.gif" }
+        },
+        alt: {
+            principal: { nombre: "Clefairy", src: "assets/clefairy.gif" },
+            estudio: { nombre: "Mewtwo", src: "assets/mewtwo.gif" },
+            descanso: { nombre: "Pikachu", src: "assets/pikachu-durmiendo.gif" }
+        }
+    };
+    const IMAGENES_POKEMON = {
+        principal: document.getElementById("imgPokemonPrincipal"),
+        estudio: document.getElementById("imgPokemonEstudio"),
+        descanso: document.getElementById("imgPokemonDescanso")
+    };
+    const DESCRIPCION_PANTALLA = {
+        principal: "de la pantalla principal",
+        estudio: "de modo estudio",
+        descanso: "de modo descanso"
+    };
+    const btnCambiarTema = document.getElementById("btnCambiarTema");
+    const textoCambiarTema = document.getElementById("textoCambiarTema");
 
-    // Cuando se inicia el timer → abrir sesión
-    const _controlarTemporizadorOrig = controlarTemporizador;
-    // No podemos redefinir directamente la función interna, así que usamos
-    // los botones para interceptar el inicio
-    function registrarInicioSiCorresponde() {
-        if (!funcionando) return; // ya corriendo
-        if (sesionActiva) return; // ya hay sesión
-        const tipo = modoActual === "descanso" ? "descanso" : "estudio";
-        const minPlan = tipo === "estudio" ? minutosEstudioConfig : minutosDescansoConfig;
-        iniciarSesionHistorial(tipo, minPlan);
+    let setPokemon = "clasico";
+    const avisosImagenFaltante = new Set();
+    let pendientesAviso = [];
+    let timeoutAvisoImagen = null;
+
+    // Junta los archivos que faltan en un solo aviso (cada imagen falla por separado)
+    function avisarImagenFaltante(src) {
+        if (avisosImagenFaltante.has(src)) return;
+        avisosImagenFaltante.add(src);
+        pendientesAviso.push(src);
+        clearTimeout(timeoutAvisoImagen);
+        timeoutAvisoImagen = setTimeout(() => {
+            const lista = pendientesAviso.join(", ");
+            mostrarNotificacion(
+                "🖼️",
+                pendientesAviso.length === 1 ? "Falta una imagen" : `Faltan ${pendientesAviso.length} imágenes`,
+                `Agrega ${lista} para ver los nuevos Pokémon.`
+            );
+            pendientesAviso = [];
+        }, 150);
     }
 
-    // Sobrescribimos controlarTemporizador para interceptar inicio
-    const btnsTemporizador = [botonInicio, botonDescanso];
-    btnsTemporizador.forEach(btn => {
-        if (!btn) return;
-        btn.addEventListener("click", () => {
-            // Después de que se ejecutó el handler original
-            setTimeout(() => {
-                if (funcionando && !sesionActiva) {
-                    const tipo = modoActual === "descanso" ? "descanso" : "estudio";
-                    const minPlan = tipo === "estudio" ? minutosEstudioConfig : minutosDescansoConfig;
-                    iniciarSesionHistorial(tipo, minPlan);
-                }
-            }, 50);
-        });
-    });
+    function pantallaParaTema() {
+        return ["principal", "estudio", "descanso"].includes(modoActual) ? modoActual : "principal";
+    }
 
-    // Cuando se llama a reiniciar → sesión interrumpida
-    const btnsReiniciar = [botonReiniciar, botonReiniciarDescanso];
-    btnsReiniciar.forEach(btn => {
-        if (!btn) return;
-        btn.addEventListener("click", () => {
-            setTimeout(() => registrarSesion(false), 10);
-        });
-    });
+    function actualizarBotonTema() {
+        if (!textoCambiarTema) return;
+        const otroSet = setPokemon === "alt" ? "clasico" : "alt";
+        textoCambiarTema.textContent = `Cambiar a ${SETS_POKEMON[otroSet][pantallaParaTema()].nombre}`;
+    }
 
-    // Cuando el timer llega a 0 → sesión completada (en contarTiempo)
-    // Usamos MutationObserver sobre el texto del timer para detectar "00:00"
-    function observarTimerCompleto(timerEl) {
-        if (!timerEl) return;
-        const obs = new MutationObserver(() => {
-            if (timerEl.textContent === "00:00" && sesionActiva) {
-                registrarSesion(true);
+    function aplicarSetPokemon(set, animar = false) {
+        setPokemon = SETS_POKEMON[set] ? set : "clasico";
+        document.documentElement.dataset.set = setPokemon;
+
+        Object.entries(IMAGENES_POKEMON).forEach(([pantalla, img]) => {
+            if (!img) return;
+            const pokemon = SETS_POKEMON[setPokemon][pantalla];
+            const clasico = SETS_POKEMON.clasico[pantalla];
+            img.onerror = null;
+            // Si falta el GIF del set alternativo, se mantiene el clásico y se avisa una sola vez
+            img.onerror = () => {
+                img.onerror = null;
+                img.src = clasico.src;
+                img.alt = `${clasico.nombre}, el pokemon ${DESCRIPCION_PANTALLA[pantalla]}`;
+                avisarImagenFaltante(pokemon.src);
+            };
+            if (img.getAttribute("src") !== pokemon.src) img.src = pokemon.src;
+            img.alt = `${pokemon.nombre}, el pokemon ${DESCRIPCION_PANTALLA[pantalla]}`;
+            if (animar) {
+                img.classList.remove("cambiando");
+                void img.offsetWidth; // reinicia la animación
+                img.classList.add("cambiando");
             }
         });
-        obs.observe(timerEl, { childList: true, subtree: true, characterData: true });
+        actualizarBotonTema();
     }
-    observarTimerCompleto(temporizador);
-    observarTimerCompleto(temporizadorDescanso);
 
-    // Cuando se cambia de modo manualmente → sesión interrumpida
-    const btnsCambioModo = [botonCambiarModo, botonCambiarModoDescanso, botonAjustesEstudio, botonAjustesDescanso];
-    btnsCambioModo.forEach(btn => {
-        if (!btn) return;
-        btn.addEventListener("click", () => {
-            setTimeout(() => { if (sesionActiva) registrarSesion(false); }, 10);
+    if (btnCambiarTema) {
+        btnCambiarTema.addEventListener("click", () => {
+            aplicarSetPokemon(setPokemon === "alt" ? "clasico" : "alt", true);
+            guardarDatoUsuario("setPokemon", setPokemon);
         });
-    });
+    }
 
-    function inicializarHistorial() {
-        // Ya inicializado al definir las variables
+    // =========================================
+    // CARGA DE DATOS DEL USUARIO
+    // =========================================
+    function cargarDatosUsuario() {
+        cargarAppsBloqueadas();
+        renderizarSugerencias();
+        renderizarListaApps();
+        actualizarEstadoBloqueador();
+        cargarConfig();
+        cargarCiclo();
+        cargarObjetivos();
+        renderizarObjetivos();
+        actualizarIndicadorCiclo();
+        aplicarSetPokemon(leerDatoUsuario("setPokemon", "clasico"));
     }
 
     // =========================================
     // INICIALIZACIÓN DE LA APP (SIEMPRE AL FINAL)
     // =========================================
-    renderizarObjetivos(); // Cargar la lista de objetivos al abrir
-    inicializarHistorial(); // Configurar historial
-    actualizarConfiguracionTiempos();
     const usuarioActivoGuardado = obtenerUsuarioActivo();
     if (usuarioActivoGuardado) {
         iniciarSesionConUsuario(usuarioActivoGuardado);
     } else {
-        cambiarModo("auth", false);
+        cambiarModo("auth");
     }
 });

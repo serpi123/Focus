@@ -988,31 +988,41 @@ body.tema-descanso {
 
 /* Distribución para pantallas de estudio y descanso:
    igual que pantalla principal — el GRUPO (objetivos + pokemon) queda centrado */
+/* Rejilla de 3 columnas: la columna del Pokémon queda centrada bajo el título
+   y el panel de objetivos ocupa el lado izquierdo con su propio espacio. */
 .contenedor-layout-modo {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 460px minmax(0, 1fr);
     align-items: stretch;
-    justify-content: center;
-    gap: 20px;
+    column-gap: 36px;
     width: 100%;
-    max-width: 800px;
+    max-width: 1180px;
     margin: 0 auto;
 }
 
 .columna-centro-modo {
+    grid-column: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 440px;
-    max-width: 100%;
-    flex-shrink: 0;
+    width: 100%;
+    min-width: 0;
 }
 
-/* El panel de objetivos en modos estudio/descanso: igual que en pantalla principal */
+/* El cuadro del Pokémon no puede ser más ancho que su columna */
+.columna-centro-modo .marco-pokemon {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* El panel de objetivos en modos estudio/descanso: pegado a la izquierda de la columna central */
 .contenedor-layout-modo .panel-objetivos {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
     position: relative;
     width: 290px;
-    flex-shrink: 0;
     max-height: unset;
 }
 
@@ -1111,6 +1121,10 @@ body.tema-descanso {
     padding: 3px 9px;
     border-radius: 20px;
     white-space: nowrap;
+}
+
+.badge-contador-apps.pausado {
+    color: #718096;
 }
 
 /* --- SWITCH TOGGLE GENERAL (INTERRUPTOR) --- */
@@ -1666,6 +1680,13 @@ body.tema-descanso {
         min-height: unset;
     }
 
+    .contenedor-layout-modo .panel-objetivos,
+    .columna-centro-modo {
+        grid-column: auto;
+        grid-row: auto;
+        justify-self: auto;
+    }
+
     .contenedor-layout-modo .panel-objetivos {
         position: static;
         width: 100%;
@@ -2009,6 +2030,9 @@ body.tema-descanso {
 .tema-estudio .panel-objetivos .item-objetivo:hover {
     border-color: rgba(116, 67, 232, 0.35);
 }
+.tema-estudio .panel-objetivos .etiqueta-subseccion {
+    color: #2b1055;
+}
 .tema-estudio .panel-objetivos .vacio-lista-objetivos {
     border-color: rgba(116, 67, 232, 0.35);
     color: #5d28cf;
@@ -2065,6 +2089,9 @@ body.tema-descanso {
 }
 .tema-descanso .panel-objetivos .item-objetivo:hover {
     border-color: rgba(31, 86, 119, 0.35);
+}
+.tema-descanso .panel-objetivos .etiqueta-subseccion {
+    color: #102e40;
 }
 .tema-descanso .panel-objetivos .vacio-lista-objetivos {
     border-color: rgba(31, 86, 119, 0.35);
@@ -2417,3 +2444,120 @@ body.tema-descanso {
 .tema-estudio .metrica-label { color: #5d28cf; }
 .tema-descanso .metrica-valor { color: #102e40; }
 .tema-descanso .metrica-label { color: #1f5677; }
+
+/* =========================================
+   CICLOS POMODORO (indicador bajo el temporizador)
+   ========================================= */
+.indicador-ciclo {
+    margin: 10px 0 0;
+    padding: 5px 16px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    color: #4b2bb3;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-align: center;
+}
+
+.tema-descanso .indicador-ciclo {
+    color: #1b4965;
+}
+
+/* El personalizador ahora tiene más filas: se compacta un poco */
+.marco-personalizador {
+    gap: 9px;
+    padding: 14px 22px;
+}
+
+/* =========================================
+   BOTÓN CAMBIAR POKÉMON (ARRIBA A LA IZQUIERDA)
+   ========================================= */
+.btn-cambiar-tema {
+    position: fixed;
+    top: 20px;
+    left: 24px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px 8px 12px;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    border-radius: 50px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    color: #1b4332;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.btn-cambiar-tema:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.btn-cambiar-tema:active {
+    transform: translateY(1px);
+}
+
+.btn-cambiar-tema svg {
+    transition: transform 0.4s ease;
+}
+
+.btn-cambiar-tema:hover svg {
+    transform: rotate(180deg);
+}
+
+.tema-estudio .btn-cambiar-tema { color: #4317a3; }
+.tema-descanso .btn-cambiar-tema { color: #1B4965; }
+
+/* Transición suave al cambiar de paleta */
+body,
+.marco-pokemon,
+.marco-temporizador,
+.panel-lateral-tarjeta,
+.marco-personalizador,
+.boton-principal,
+.boton-secundario {
+    transition: background 0.4s ease, background-color 0.4s ease, color 0.4s ease,
+                border-color 0.4s ease, box-shadow 0.4s ease, transform 0.3s ease;
+}
+
+.imagen-pokemon.cambiando {
+    animation: cambio-pokemon 0.45s ease;
+}
+
+@keyframes cambio-pokemon {
+    0% { transform: scale(1); opacity: 1; }
+    45% { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 700px) {
+    .btn-cambiar-tema span { display: none; }
+    .btn-cambiar-tema { padding: 9px; }
+}
+
+/* Set alternativo: fondos más claros, el título necesita más sombra para leerse */
+html[data-set="alt"] body.tema-bulbasaur .titulo {
+    text-shadow: 0 2px 12px rgba(106, 45, 67, 0.45);
+}
+html[data-set="alt"] body.tema-estudio .titulo {
+    text-shadow: 0 2px 12px rgba(66, 34, 92, 0.45);
+}
+html[data-set="alt"] body.tema-descanso .titulo {
+    text-shadow: 0 2px 12px rgba(107, 74, 0, 0.55);
+}
+
+/* El historial deja lugar para la barra superior y el botón de cambiar Pokémon */
+#pantalla-historial {
+    padding-top: 84px;
+    justify-content: flex-start;
+}

@@ -1,0 +1,595 @@
+/* =========================================
+   TEMAS ALTERNATIVOS (ARCHIVO GENERADO)
+   No editar a mano: se crea con `npm run temas` a partir de styles.css
+   ========================================= */
+
+/* ---------- Clefairy (rosa) ---------- */
+html[data-set="alt"] body.tema-bulbasaur {
+    background: linear-gradient(135deg, #f3d8e2 0%, #e4b7c7 50%, #d595ac 100%);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-barra-extra:hover {
+    background: #6a2d43;
+    box-shadow: 0 3px 8px rgba(106, 45, 67, 0.3);
+}
+html[data-set="alt"] body.tema-bulbasaur .mensaje-exito {
+    color: #fad1e0;
+    background: rgba(185, 16, 78, 0.28);
+    border: 1px solid rgba(211, 52, 110, 0.55);
+}
+html[data-set="alt"] .tema-bulbasaur .titulo {
+    text-shadow: 0 4px 14px rgba(67, 27, 42, 0.22);
+}
+html[data-set="alt"] body.tema-bulbasaur .marco-pokemon.marco-bulbasaur {
+    box-shadow: 0 14px 35px rgba(106, 45, 67, 0.15),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] body.tema-bulbasaur .marco-bulbasaur:hover {
+    box-shadow: 0 18px 40px rgba(106, 45, 67, 0.22);
+}
+html[data-set="alt"] body.tema-bulbasaur .marco-personalizador {
+    box-shadow: 0 12px 30px rgba(106, 45, 67, 0.14),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] body.tema-bulbasaur .marco-personalizador:hover {
+    box-shadow: 0 16px 36px rgba(106, 45, 67, 0.2);
+}
+html[data-set="alt"] body.tema-bulbasaur .etiqueta-tiempo {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-stepper {
+    border: 2px solid #b75277;
+    color: #6a2d43;
+    box-shadow: 0 3px 8px rgba(106, 45, 67, 0.12);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-stepper:hover {
+    background-color: #91405e;
+    border-color: #91405e;
+    box-shadow: 0 6px 14px rgba(106, 45, 67, 0.25);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-stepper:active {
+    box-shadow: 0 2px 4px rgba(106, 45, 67, 0.2);
+}
+html[data-set="alt"] body.tema-bulbasaur .valor-tiempo span {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .valor-tiempo small {
+    color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .divisor-personalizador {
+    background: rgba(106, 45, 67, 0.15);
+}
+html[data-set="alt"] body.tema-bulbasaur .select-personalizador {
+    border: 1.5px solid #b75277;
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .select-personalizador:hover,
+html[data-set="alt"] body.tema-bulbasaur .select-personalizador:focus {
+    border-color: #6a2d43;
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-preset {
+    border: 1.5px solid rgba(183, 82, 119, 0.35);
+    color: #6a2d43;
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-preset:hover {
+    background: #b75277;
+    border-color: #b75277;
+    box-shadow: 0 4px 10px rgba(106, 45, 67, 0.18);
+}
+html[data-set="alt"] .tema-bulbasaur .boton-principal {
+    background: linear-gradient(135deg, #91405e 0%, #6a2d43 100%);
+    box-shadow: 0 8px 24px rgba(106, 45, 67, 0.38),
+                0 2px 4px rgba(0, 0, 0, 0.08);
+}
+html[data-set="alt"] .tema-bulbasaur .boton-principal:hover {
+    box-shadow: 0 12px 28px rgba(106, 45, 67, 0.5);
+}
+html[data-set="alt"] .tema-bulbasaur .boton-principal:active {
+    box-shadow: 0 4px 12px rgba(106, 45, 67, 0.28);
+}
+html[data-set="alt"] .tema-bulbasaur .boton-secundario {
+    color: #6a2d43;
+    box-shadow: 0 4px 14px rgba(106, 45, 67, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] .tema-bulbasaur .boton-secundario:hover {
+    border-color: rgba(106, 45, 67, 0.4);
+    color: #431b2a;
+    box-shadow: 0 8px 20px rgba(106, 45, 67, 0.2);
+}
+html[data-set="alt"] .tema-bulbasaur .boton-secundario:active {
+    box-shadow: 0 2px 6px rgba(106, 45, 67, 0.12);
+}
+html[data-set="alt"] body.tema-bulbasaur .panel-lateral-tarjeta {
+    box-shadow: 0 14px 35px rgba(106, 45, 67, 0.14),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] body.tema-bulbasaur .panel-lateral-tarjeta:hover {
+    box-shadow: 0 18px 40px rgba(106, 45, 67, 0.2);
+}
+html[data-set="alt"] body.tema-bulbasaur .cabecera-panel-bloqueador {
+    border-bottom: 1.5px solid rgba(106, 45, 67, 0.14);
+}
+html[data-set="alt"] body.tema-bulbasaur .icono-escudo-bloqueador {
+    background: rgba(183, 82, 119, 0.22);
+    border: 1px solid rgba(183, 82, 119, 0.4);
+    color: #6a2d43;
+    box-shadow: 0 3px 8px rgba(106, 45, 67, 0.1);
+}
+html[data-set="alt"] body.tema-bulbasaur .titulo-bloqueador {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .subtitulo-bloqueador {
+    color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .badge-contador-apps {
+    color: #6a2d43;
+    background: rgba(183, 82, 119, 0.25);
+    border: 1px solid rgba(183, 82, 119, 0.45);
+}
+html[data-set="alt"] body.tema-bulbasaur .switch-toggle input:checked + .slider-toggle {
+    background-color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .etiqueta-subseccion {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-enlace-accion {
+    color: #6a2d43;
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-enlace-accion:hover {
+    color: #431b2a;
+    background: rgba(183, 82, 119, 0.18);
+}
+html[data-set="alt"] body.tema-bulbasaur .separador-enlaces {
+    color: #c67492;
+}
+html[data-set="alt"] body.tema-bulbasaur .carrusel-sugerencias-apps {
+    scrollbar-color: #c67492 transparent;
+}
+html[data-set="alt"] body.tema-bulbasaur .carrusel-sugerencias-apps::-webkit-scrollbar-thumb {
+    background-color: #d595ac;
+}
+html[data-set="alt"] body.tema-bulbasaur .chip-sugerencia-app {
+    border: 1.5px solid rgba(183, 82, 119, 0.35);
+    color: #431b2a;
+    box-shadow: 0 2px 5px rgba(106, 45, 67, 0.06);
+}
+html[data-set="alt"] body.tema-bulbasaur .chip-sugerencia-app:hover {
+    border-color: #b75277;
+    box-shadow: 0 4px 10px rgba(106, 45, 67, 0.15);
+}
+html[data-set="alt"] body.tema-bulbasaur .chip-sugerencia-app.seleccionada {
+    background: #f3d8e2;
+    border-color: #6a2d43;
+    color: #431b2a;
+    box-shadow: 0 0 0 1.5px #6a2d43, 0 3px 8px rgba(106, 45, 67, 0.18);
+}
+html[data-set="alt"] body.tema-bulbasaur .chip-check {
+    color: #6a2d43;
+}
+html[data-set="alt"] body.tema-bulbasaur .icono-input-buscar {
+    color: #b75277;
+}
+html[data-set="alt"] body.tema-bulbasaur .input-app-personalizada {
+    border: 1.5px solid #b75277;
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .input-app-personalizada:focus {
+    border-color: #6a2d43;
+    box-shadow: 0 0 0 3px rgba(183, 82, 119, 0.25);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-agregar-manual {
+    background: #91405e;
+    box-shadow: 0 3px 8px rgba(145, 64, 94, 0.25);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-agregar-manual:hover {
+    background: #6a2d43;
+    box-shadow: 0 5px 12px rgba(106, 45, 67, 0.3);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-examinar-exe {
+    border: 1.5px solid #b75277;
+    color: #6a2d43;
+    box-shadow: 0 2px 6px rgba(106, 45, 67, 0.08);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-examinar-exe:hover {
+    background: #b75277;
+    border-color: #b75277;
+    box-shadow: 0 4px 10px rgba(106, 45, 67, 0.2);
+}
+html[data-set="alt"] body.tema-bulbasaur .contenedor-lista-apps {
+    scrollbar-color: #c67492 transparent;
+}
+html[data-set="alt"] body.tema-bulbasaur .contenedor-lista-apps::-webkit-scrollbar-thumb {
+    background-color: #d595ac;
+}
+html[data-set="alt"] body.tema-bulbasaur .tarjeta-app-bloqueada {
+    border: 1.5px solid rgba(183, 82, 119, 0.35);
+    box-shadow: 0 2px 6px rgba(106, 45, 67, 0.06);
+}
+html[data-set="alt"] body.tema-bulbasaur .tarjeta-app-bloqueada:hover {
+    border-color: #b75277;
+    box-shadow: 0 5px 14px rgba(106, 45, 67, 0.12);
+}
+html[data-set="alt"] body.tema-bulbasaur .nombre-app {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .proceso-app {
+    color: #b75277;
+}
+html[data-set="alt"] body.tema-bulbasaur .estado-texto-app.activo {
+    background: rgba(106, 45, 67, 0.12);
+    color: #6a2d43;
+}
+html[data-set="alt"] body.tema-bulbasaur .switch-app input:checked + .slider-app {
+    background-color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .vacio-lista-apps {
+    color: #91405e;
+    border: 1.5px dashed rgba(183, 82, 119, 0.45);
+}
+html[data-set="alt"] body.tema-bulbasaur .titulo-vacio-apps {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .desc-vacio-apps {
+    color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .cabecera-panel-lateral {
+    border-bottom: 1.5px solid rgba(106, 45, 67, 0.14);
+}
+html[data-set="alt"] body.tema-bulbasaur .icono-badge-lateral {
+    background: rgba(183, 82, 119, 0.22);
+    border: 1px solid rgba(183, 82, 119, 0.4);
+    color: #6a2d43;
+    box-shadow: 0 3px 8px rgba(106, 45, 67, 0.1);
+}
+html[data-set="alt"] body.tema-bulbasaur .titulo-lateral {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .subtitulo-lateral {
+    color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .badge-contador-lateral {
+    background: rgba(183, 82, 119, 0.22);
+    color: #431b2a;
+    border: 1px solid rgba(183, 82, 119, 0.45);
+}
+html[data-set="alt"] body.tema-bulbasaur .formulario-agregar-objetivo .icono-input-buscar {
+    color: #b75277;
+}
+html[data-set="alt"] body.tema-bulbasaur .input-lateral {
+    border: 1.5px solid rgba(183, 82, 119, 0.4);
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .input-lateral:focus {
+    border-color: #6a2d43;
+    box-shadow: 0 0 0 3px rgba(183, 82, 119, 0.25);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-agregar-objetivo {
+    background: #6a2d43;
+    box-shadow: 0 4px 10px rgba(106, 45, 67, 0.25);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-agregar-objetivo:hover {
+    background: #431b2a;
+    box-shadow: 0 6px 14px rgba(106, 45, 67, 0.35);
+}
+html[data-set="alt"] body.tema-bulbasaur .lista-objetivos::-webkit-scrollbar-thumb {
+    background: rgba(183, 82, 119, 0.4);
+}
+html[data-set="alt"] body.tema-bulbasaur .item-objetivo {
+    box-shadow: 0 2px 6px rgba(106, 45, 67, 0.06);
+}
+html[data-set="alt"] body.tema-bulbasaur .item-objetivo:hover {
+    border-color: rgba(183, 82, 119, 0.4);
+    box-shadow: 0 4px 10px rgba(106, 45, 67, 0.12);
+}
+html[data-set="alt"] body.tema-bulbasaur .item-objetivo.completado .texto-objetivo {
+    color: #92747f;
+}
+html[data-set="alt"] body.tema-bulbasaur .checkbox-objetivo {
+    accent-color: #6a2d43;
+}
+html[data-set="alt"] body.tema-bulbasaur .texto-objetivo {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .vacio-lista-objetivos {
+    border: 1.5px dashed rgba(183, 82, 119, 0.4);
+    color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .metrica-valor {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .metrica-label {
+    color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-filtro-hist {
+    color: rgba(67, 27, 42, 0.7);
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-filtro-hist.activo,
+html[data-set="alt"] body.tema-bulbasaur .btn-filtro-hist:hover {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .sesion-duracion {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .sesion-duracion span {
+    color: #91405e;
+}
+html[data-set="alt"] body.tema-bulbasaur .sesion-badge.completa {
+    background: rgba(183, 82, 119, 0.2);
+    color: #6a2d43;
+    border: 1px solid rgba(183, 82, 119, 0.4);
+}
+html[data-set="alt"] .tema-bulbasaur .metrica-valor {
+    color: #431b2a;
+}
+html[data-set="alt"] .tema-bulbasaur .metrica-label {
+    color: #91405e;
+}
+html[data-set="alt"] .tema-bulbasaur .btn-filtro-hist.activo {
+    color: #431b2a;
+}
+html[data-set="alt"] body.tema-bulbasaur .btn-cambiar-tema {
+    color: #431b2a;
+}
+
+/* ---------- Mewtwo (lila psíquico) ---------- */
+html[data-set="alt"] body.tema-estudio {
+    background: linear-gradient(135deg, #edd5f5 0%, #d8ade5 100%);
+}
+html[data-set="alt"] body.tema-estudio .marco-temporizador {
+    box-shadow: 0 12px 30px rgba(168, 93, 191, 0.16),
+                0 2px 6px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] body.tema-estudio .marco-temporizador:hover {
+    box-shadow: 0 16px 36px rgba(168, 93, 191, 0.22);
+}
+html[data-set="alt"] body.tema-estudio #temporizador,
+html[data-set="alt"] body.tema-estudio #temporizador-descanso {
+    color: #a85dbf;
+}
+html[data-set="alt"] body.tema-estudio .marco-pokemon {
+    box-shadow: 0 14px 35px rgba(168, 93, 191, 0.16),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] body.tema-estudio .marco-pokemon:hover {
+    box-shadow: 0 18px 40px rgba(168, 93, 191, 0.22);
+}
+html[data-set="alt"] body.tema-estudio .boton-principal {
+    background: linear-gradient(135deg, #b064c7 0%, #984eae 100%);
+    box-shadow: 0 8px 24px rgba(168, 93, 191, 0.38),
+                0 2px 4px rgba(0, 0, 0, 0.08);
+}
+html[data-set="alt"] body.tema-estudio .boton-principal:hover {
+    box-shadow: 0 12px 28px rgba(168, 93, 191, 0.5);
+}
+html[data-set="alt"] body.tema-estudio .boton-principal:active {
+    box-shadow: 0 4px 12px rgba(168, 93, 191, 0.28);
+}
+html[data-set="alt"] body.tema-estudio .boton-secundario {
+    color: #88449d;
+    box-shadow: 0 4px 14px rgba(168, 93, 191, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] body.tema-estudio .boton-secundario:hover {
+    border-color: rgba(168, 93, 191, 0.4);
+    color: #733387;
+    box-shadow: 0 8px 20px rgba(168, 93, 191, 0.2);
+}
+html[data-set="alt"] body.tema-estudio .boton-secundario:active {
+    box-shadow: 0 2px 6px rgba(168, 93, 191, 0.12);
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos {
+    box-shadow: 0 14px 35px rgba(115, 51, 135, 0.2);
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .cabecera-panel-lateral {
+    border-bottom-color: rgba(176, 100, 199, 0.2);
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .icono-badge-lateral {
+    background: rgba(176, 100, 199, 0.22);
+    border-color: rgba(176, 100, 199, 0.4);
+    color: #733387;
+    box-shadow: 0 3px 8px rgba(115, 51, 135, 0.12);
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .titulo-lateral {
+    color: #3e1e47;
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .subtitulo-lateral {
+    color: #9649ae;
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .badge-contador-lateral {
+    background: rgba(176, 100, 199, 0.2);
+    color: #542563;
+    border-color: rgba(176, 100, 199, 0.4);
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .input-lateral {
+    border-color: rgba(176, 100, 199, 0.35);
+    color: #3e1e47;
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .input-lateral:focus {
+    border-color: #9649ae;
+    box-shadow: 0 0 0 3px rgba(176, 100, 199, 0.25);
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .formulario-agregar-objetivo .icono-input-buscar {
+    color: #b064c7;
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .btn-agregar-objetivo {
+    background: #9649ae;
+    box-shadow: 0 4px 10px rgba(115, 51, 135, 0.25);
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .btn-agregar-objetivo:hover {
+    background: #733387;
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .texto-objetivo {
+    color: #3e1e47;
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .checkbox-objetivo {
+    accent-color: #9649ae;
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .item-objetivo:hover {
+    border-color: rgba(176, 100, 199, 0.35);
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .etiqueta-subseccion {
+    color: #3e1e47;
+}
+html[data-set="alt"] .tema-estudio .panel-objetivos .vacio-lista-objetivos {
+    border-color: rgba(176, 100, 199, 0.35);
+    color: #9649ae;
+}
+html[data-set="alt"] body.tema-estudio .sesion-icono-tipo.estudio {
+    background: rgba(176, 100, 199, 0.15);
+    border: 1.5px solid rgba(176, 100, 199, 0.3);
+}
+html[data-set="alt"] .tema-estudio .metrica-valor {
+    color: #3e1e47;
+}
+html[data-set="alt"] .tema-estudio .metrica-label {
+    color: #9649ae;
+}
+html[data-set="alt"] body.tema-estudio .indicador-ciclo {
+    color: #854698;
+}
+html[data-set="alt"] .tema-estudio .btn-cambiar-tema {
+    color: #733387;
+}
+
+/* ---------- Pikachu (amarillo y marrón) ---------- */
+html[data-set="alt"] body.tema-descanso {
+    background: linear-gradient(135deg, #fff1d1 0%, #fcdd94 100%);
+}
+html[data-set="alt"] .tema-descanso .marco-temporizador {
+    box-shadow: 0 12px 30px rgba(107, 81, 21, 0.15),
+                0 2px 6px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] .tema-descanso .marco-temporizador:hover {
+    box-shadow: 0 16px 36px rgba(107, 81, 21, 0.22);
+}
+html[data-set="alt"] .tema-descanso #temporizador-descanso {
+    color: #6b5115;
+}
+html[data-set="alt"] .tema-descanso .marco-pokemon {
+    box-shadow: 0 14px 35px rgba(107, 81, 21, 0.16),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] .tema-descanso .marco-pokemon:hover {
+    box-shadow: 0 18px 40px rgba(107, 81, 21, 0.22);
+}
+html[data-set="alt"] .tema-descanso .boton-principal {
+    background: linear-gradient(135deg, #7e5f18 0%, #5c4612 100%);
+    box-shadow: 0 8px 24px rgba(107, 81, 21, 0.38),
+                0 2px 4px rgba(0, 0, 0, 0.08);
+}
+html[data-set="alt"] .tema-descanso .boton-principal:hover {
+    box-shadow: 0 12px 28px rgba(107, 81, 21, 0.5);
+}
+html[data-set="alt"] .tema-descanso .boton-principal:active {
+    box-shadow: 0 4px 12px rgba(107, 81, 21, 0.28);
+}
+html[data-set="alt"] .tema-descanso .boton-secundario {
+    color: #6b5115;
+    box-shadow: 0 4px 14px rgba(107, 81, 21, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+}
+html[data-set="alt"] .tema-descanso .boton-secundario:hover {
+    border-color: rgba(107, 81, 21, 0.4);
+    color: #44330c;
+    box-shadow: 0 8px 20px rgba(107, 81, 21, 0.2);
+}
+html[data-set="alt"] .tema-descanso .boton-secundario:active {
+    box-shadow: 0 2px 6px rgba(107, 81, 21, 0.12);
+}
+html[data-set="alt"] body.tema-descanso #contenedor-minijuego {
+    box-shadow: 0 10px 25px rgba(107, 81, 21, 0.15);
+}
+html[data-set="alt"] body.tema-descanso .celda-ttt {
+    color: #6b5115;
+}
+html[data-set="alt"] body.tema-descanso .badge-contador-apps.pausado {
+    color: #998c6e;
+}
+html[data-set="alt"] body.tema-descanso .slider-toggle {
+    background-color: #e3dbc9;
+}
+html[data-set="alt"] body.tema-descanso .slider-app {
+    background-color: #e3dbc9;
+}
+html[data-set="alt"] body.tema-descanso .btn-eliminar-app {
+    color: #998c6e;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos {
+    box-shadow: 0 14px 35px rgba(107, 81, 21, 0.18);
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .cabecera-panel-lateral {
+    border-bottom-color: rgba(126, 95, 24, 0.2);
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .icono-badge-lateral {
+    background: rgba(126, 95, 24, 0.2);
+    border-color: rgba(126, 95, 24, 0.4);
+    color: #44330c;
+    box-shadow: 0 3px 8px rgba(107, 81, 21, 0.12);
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .titulo-lateral {
+    color: #44330c;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .subtitulo-lateral {
+    color: #7e5f18;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .badge-contador-lateral {
+    background: rgba(126, 95, 24, 0.2);
+    color: #44330c;
+    border-color: rgba(126, 95, 24, 0.4);
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .input-lateral {
+    border-color: rgba(126, 95, 24, 0.35);
+    color: #44330c;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .input-lateral:focus {
+    border-color: #7e5f18;
+    box-shadow: 0 0 0 3px rgba(126, 95, 24, 0.25);
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .formulario-agregar-objetivo .icono-input-buscar {
+    color: #7e5f18;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .btn-agregar-objetivo {
+    background: #7e5f18;
+    box-shadow: 0 4px 10px rgba(107, 81, 21, 0.25);
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .btn-agregar-objetivo:hover {
+    background: #44330c;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .texto-objetivo {
+    color: #44330c;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .checkbox-objetivo {
+    accent-color: #7e5f18;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .item-objetivo:hover {
+    border-color: rgba(126, 95, 24, 0.35);
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .etiqueta-subseccion {
+    color: #44330c;
+}
+html[data-set="alt"] .tema-descanso .panel-objetivos .vacio-lista-objetivos {
+    border-color: rgba(126, 95, 24, 0.35);
+    color: #7e5f18;
+}
+html[data-set="alt"] body.tema-descanso .sesion-icono-tipo.descanso {
+    background: rgba(126, 95, 24, 0.15);
+    border: 1.5px solid rgba(126, 95, 24, 0.3);
+}
+html[data-set="alt"] body.tema-descanso .sesion-titulo {
+    color: #3c3219;
+}
+html[data-set="alt"] body.tema-descanso .sesion-subtitulo {
+    color: #7c7158;
+}
+html[data-set="alt"] .tema-descanso .metrica-valor {
+    color: #44330c;
+}
+html[data-set="alt"] .tema-descanso .metrica-label {
+    color: #7e5f18;
+}
+html[data-set="alt"] .tema-descanso .indicador-ciclo {
+    color: #6b5115;
+}
+html[data-set="alt"] .tema-descanso .btn-cambiar-tema {
+    color: #6b5115;
+}
